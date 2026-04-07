@@ -1,403 +1,777 @@
 <!DOCTYPE html>
-
-<html class="dark" lang="zh-CN">
+<html lang="zh-CN" class="dark">
 
 <head>
-    <meta charset="utf-8" />
-    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="/static/favicon.ico">
+    <title>城轨安全相关方看板</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&amp;family=Inter:wght@300;400;500;600;700&amp;display=swap"
-        rel="stylesheet" />
-    <link
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
-        rel="stylesheet" />
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-    <script id="tailwind-config">
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
         tailwind.config = {
-            darkMode: "class",
+            darkMode: 'class',
             theme: {
                 extend: {
-                    "colors": {
-                        "inverse-surface": "#e5e2e1",
-                        "tertiary-fixed-dim": "#00dbe9",
-                        "primary-container": "#c70019",
-                        "on-tertiary": "#00363a",
-                        "surface-variant": "#353534",
-                        "tertiary-fixed": "#7df4ff",
-                        "on-primary-fixed-variant": "#93000f",
-                        "on-primary": "#680008",
-                        "background": "#131313",
-                        "on-secondary": "#303030",
-                        "error-container": "#93000a",
-                        "primary-fixed": "#ffdad6",
-                        "surface-container-lowest": "#0e0e0e",
-                        "on-primary-container": "#ffd5d0",
-                        "inverse-primary": "#c00018",
-                        "tertiary-container": "#006d74",
-                        "primary": "#ffb3ac",
-                        "primary-fixed-dim": "#ffb3ac",
-                        "surface-container-low": "#1c1b1b",
-                        "secondary": "#c8c6c6",
-                        "on-primary-fixed": "#410003",
-                        "surface": "#131313",
-                        "on-tertiary-container": "#5df2ff",
-                        "on-error-container": "#ffdad6",
-                        "on-secondary-fixed": "#1b1c1c",
-                        "inverse-on-surface": "#313030",
-                        "on-tertiary-fixed": "#002022",
-                        "on-surface-variant": "#e6bdb8",
-                        "on-tertiary-fixed-variant": "#004f54",
-                        "outline": "#ad8884",
-                        "outline-variant": "#5d3f3c",
-                        "surface-bright": "#393939",
-                        "on-error": "#690005",
-                        "surface-container-highest": "#353534",
-                        "surface-container": "#201f1f",
-                        "on-secondary-container": "#b6b5b4",
-                        "error": "#ffb4ab",
-                        "on-background": "#e5e2e1",
-                        "secondary-fixed": "#e4e2e1",
-                        "secondary-fixed-dim": "#c8c6c6",
-                        "secondary-container": "#474747",
-                        "surface-tint": "#ffb3ac",
-                        "tertiary": "#00dbe9",
-                        "on-secondary-fixed-variant": "#474747",
-                        "surface-dim": "#131313",
-                        "on-surface": "#e5e2e1",
-                        "surface-container-high": "#2a2a2a"
+                    colors: {
+                        crrc: {
+                            red: '#C70019',
+                            darkRed: '#93000F',
+                        },
+                        surface: {
+                            base: '#131313',
+                            lowest: '#0E0E0E',
+                            low: '#1B1B1B',
+                            high: '#2A2A2A',
+                            highest: '#353535',
+                            bright: '#393939',
+                            variant: 'rgba(53, 53, 53, 0.4)',
+                        },
+                        text: {
+                            primary: '#FFFFFF',
+                            secondary: '#E2E2E2',
+                            muted: '#A0A0A0'
+                        }
                     },
-                    "borderRadius": {
-                        "DEFAULT": "0px",
-                        "lg": "0px",
-                        "xl": "0px",
-                        "full": "9999px"
+                    fontFamily: {
+                        display: ['Space Grotesk', 'sans-serif'],
+                        body: ['Inter', 'sans-serif'],
                     },
-                    "fontFamily": {
-                        "headline": ["Space Grotesk"],
-                        "body": ["Inter", "sans-serif"],
-                        "label": ["Inter", "sans-serif"]
+                    boxShadow: {
+                        glow: '0 0 10px rgba(199, 0, 25, 0.5)',
+                        'inner-glow': 'inset 0 0 5px rgba(199, 0, 25, 0.5)',
+                        ambient: '0 10px 30px rgba(226, 226, 226, 0.06)',
                     }
-                },
-            },
+                }
+            }
         }
     </script>
+
+    <!-- ECharts -->
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+
+    <!-- Grid.js -->
+    <link href="https://cdn.jsdelivr.net/npm/gridjs/dist/theme/mermaid.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/gridjs/dist/gridjs.umd.js"></script>
+
     <style>
-        .material-symbols-outlined {
-            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        body {
+            background-color: #131313;
+            color: #E2E2E2;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
         }
 
-        body {
-            font-family: 'Inter', sans-serif;
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0E0E0E;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #2A2A2A;
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #393939;
         }
 
         h1,
         h2,
         h3,
-        .headline {
-            font-family: 'Space Grotesk', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        h4,
+        h5,
+        h6,
+        .font-display {
+            font-family: 'Space Grotesk', sans-serif;
         }
 
-        ::-webkit-scrollbar {
-            width: 4px;
-            height: 4px;
+        /* Glassmorphism */
+        .glass-panel {
+            background-color: rgba(53, 53, 53, 0.4);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 12px;
         }
 
-        ::-webkit-scrollbar-track {
-            background: #0e0e0e;
+        /* Table Styles - No Lines Rule */
+        table {
+            border-collapse: collapse;
+            width: 100%;
         }
 
-        ::-webkit-scrollbar-thumb {
-            background: #c70019;
+        th {
+            background-color: #0E0E0E;
+            color: #A0A0A0;
+            font-weight: 500;
+            text-align: left;
+            padding: 14px 16px;
+            font-size: 0.875rem;
+            white-space: nowrap;
+        }
+
+        th:first-child {
+            border-top-left-radius: 8px;
+        }
+
+        th:last-child {
+            border-top-right-radius: 8px;
+        }
+
+        td {
+            padding: 14px 16px;
+            background-color: #1B1B1B;
+            border-bottom: 4px solid #131313;
+            font-size: 0.875rem;
+        }
+
+        tr:last-child td:first-child {
+            border-bottom-left-radius: 8px;
+        }
+
+        tr:last-child td:last-child {
+            border-bottom-right-radius: 8px;
+        }
+
+        tr:hover td {
+            background-color: #2A2A2A;
+            transition: background-color 0.2s;
+        }
+
+        /* Input underline focus */
+        .input-glow:focus {
+            border-bottom-color: #C70019;
+            outline: none;
+        }
+
+        /* Status Chips */
+        .chip {
+            padding: 2px 10px;
+            font-size: 0.6875rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            white-space: nowrap;
+            border-radius: 6px;
+        }
+
+        .chip-working {
+            background-color: rgba(199, 0, 25, 0.2);
+            color: #FFFFFF;
+            box-shadow: 0 0 10px rgba(199, 0, 25, 0.2);
+        }
+
+        .chip-entered {
+            background-color: rgba(255, 255, 255, 0.1);
+            color: #E2E2E2;
+        }
+
+        .chip-completed {
+            background-color: rgba(42, 42, 42, 0.8);
+            color: #A0A0A0;
+        }
+
+        .chip-other {
+            background-color: rgba(27, 27, 27, 1);
+            color: #A0A0A0;
+        }
+
+        /* Button gradient */
+        .btn-primary {
+            background: linear-gradient(180deg, #C70019 0%, #93000F 100%);
+            box-shadow: inset 0 0 5px rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+        }
+
+        /* Utility class for rounded corners */
+        .rounded-panel {
+            border-radius: 12px;
+        }
+
+        /* Grid.js Custom Theme for Kinetic Command */
+        .gridjs-container {
+            font-family: 'Inter', sans-serif;
+            color: #E2E2E2;
+            width: 100% !important;
+        }
+
+        .gridjs-wrapper {
+            box-shadow: none !important;
+            border: none !important;
+            border-radius: 0 !important;
+            background-color: transparent !important;
+        }
+
+        .gridjs-table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+            border: none !important;
+        }
+
+        .gridjs-thead {
+            background-color: #0E0E0E !important;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .gridjs-th {
+            background-color: #0E0E0E !important;
+            color: #A0A0A0 !important;
+            border: none !important;
+            font-weight: 500 !important;
+            padding: 10px 16px !important;
+            font-size: 0.875rem !important;
+        }
+
+        .gridjs-tr {
+            background-color: #1B1B1B !important;
+        }
+
+        .gridjs-tr:hover {
+            background-color: #2A2A2A !important;
+        }
+
+        .gridjs-td {
+            border: none !important;
+            border-bottom: 2px solid #131313 !important;
+            padding: 8px 16px !important;
+            color: #E2E2E2 !important;
+            background-color: transparent !important;
+            font-size: 0.875rem !important;
+        }
+
+        /* Make sure GridJS search and pagination inputs match dark theme */
+        .gridjs-search-input,
+        .gridjs-pagination .gridjs-pages button {
+            background-color: #131313 !important;
+            color: #E2E2E2 !important;
+            border: 1px solid #353535 !important;
+        }
+
+        .gridjs-pagination .gridjs-pages button:hover {
+            background-color: #2A2A2A !important;
+        }
+
+        .gridjs-pagination .gridjs-pages button.gridjs-currentPage {
+            background-color: #C70019 !important;
+            color: white !important;
+            border-color: #C70019 !important;
+        }
+
+        .gridjs-footer {
+            background-color: #0E0E0E !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 8px 16px !important;
+        }
+
+        .gridjs-summary {
+            color: #A0A0A0 !important;
+        }
+
+        .gridjs-head {
+            width: 100%;
+            padding: 16px 24px;
+            background-color: transparent;
+        }
+
+        .gridjs-head .gridjs-search {
+            float: right;
         }
     </style>
 </head>
 
-<body class="bg-background text-on-surface selection:bg-primary-container selection:text-white">
-    <!-- TopNavBar -->
-    <nav
-        class="fixed top-0 left-0 w-full z-50 flex justify-between items-center px-6 py-3 bg-[#131313] border-b-2 border-[#C70019]">
-        <div class="flex items-center gap-8">
-            <span
-                class="text-xl font-black tracking-tighter text-[#C70019] font-['Space_Grotesk'] uppercase">相关方看板</span>
-        </div>
-        <div class="flex items-center gap-4">
-            <!-- Action icons removed -->
-        </div>
-    </nav>
-    <!-- Main Content Canvas -->
-    <main class="pt-20 p-8 min-h-screen">
-        <!-- Header Metrics -->
-        <header class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-            <div class="bg-surface-container p-6 relative overflow-hidden">
-                <div class="absolute top-0 right-0 w-1 h-full bg-[#C70019]"></div>
-                <p class="text-gray-500 text-xs font-bold uppercase tracking-widest mb-2 font-['Space_Grotesk']">当日作业总人数
-                </p>
-                <div class="flex items-baseline gap-2">
-                    <span class="text-4xl font-black text-white font-['Space_Grotesk']">13</span>
-                    <span class="text-[#C70019] text-xs font-bold font-['Space_Grotesk']">实时</span>
-                </div>
-            </div>
-            <div class="bg-surface-container p-6 relative overflow-hidden">
-                <div class="absolute top-0 right-0 w-1 h-full bg-[#C70019]/50"></div>
-                <p class="text-gray-500 text-xs font-bold uppercase tracking-widest mb-2 font-['Space_Grotesk']">
-                    当日完成作业人数</p>
-                <div class="flex items-baseline gap-2">
-                    <span class="text-4xl font-black text-white font-['Space_Grotesk']">9</span>
-                    <span class="text-tertiary text-xs font-bold font-['Space_Grotesk']">已同步</span>
-                </div>
-            </div>
-            <div class="bg-surface-container p-6 relative overflow-hidden">
-                <div class="absolute top-0 right-0 w-1 h-full bg-tertiary"></div>
-                <p class="text-gray-500 text-xs font-bold uppercase tracking-widest mb-2 font-['Space_Grotesk']">
-                    当日交车作业人数</p>
-                <div class="flex items-baseline gap-2">
-                    <span class="text-4xl font-black text-white font-['Space_Grotesk']">4</span>
-                    <span class="text-white/40 text-xs font-bold font-['Space_Grotesk']">单元</span>
-                </div>
-            </div>
-            <div class="bg-surface-container p-6 relative overflow-hidden">
-                <div class="absolute top-0 right-0 w-1 h-full bg-[#C70019] shadow-[0_0_15px_#C70019]"></div>
-                <p class="text-gray-500 text-xs font-bold uppercase tracking-widest mb-2 font-['Space_Grotesk']">
-                    当日库外作业人数</p>
-                <div class="flex items-baseline gap-2">
-                    <span class="text-4xl font-black text-white font-['Space_Grotesk']">-</span>
-                    <span class="text-[#C70019] text-xs font-bold font-['Space_Grotesk']">最优</span>
-                </div>
-            </div>
-        </header>
-        <!-- Charts Row -->
-        <section class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-            <!-- Personnel Status -->
-            <div class="bg-surface-container-lowest p-6 flex flex-col">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-sm font-bold uppercase tracking-[0.2em] text-white flex items-center gap-2">
-                        <span class="w-2 h-2 bg-[#C70019]"></span> 当日作业状态
-                    </h3>
-                    <span class="material-symbols-outlined text-gray-600 cursor-pointer">more_horiz</span>
-                </div>
-                <div class="flex items-center justify-around h-48">
-                    <div class="relative w-32 h-32">
-                        <svg class="w-full h-full transform -rotate-90">
-                            <circle class="text-[#201f1f]" cx="64" cy="64" fill="transparent" r="50"
-                                stroke="currentColor" stroke-width="12"></circle>
-                            <circle class="text-[#C70019]" cx="64" cy="64" fill="transparent" r="50"
-                                stroke="currentColor" stroke-dasharray="314" stroke-dashoffset="60" stroke-width="12">
-                            </circle>
-                        </svg>
-                        <div class="absolute inset-0 flex flex-col items-center justify-center">
-                            <span class="text-2xl font-bold font-['Space_Grotesk']">13</span>
-                            <span class="text-[8px] text-gray-500 uppercase">已进入</span>
-                        </div>
-                    </div>
-                    <div class="space-y-2">
-                        <div class="flex items-center gap-3">
-                            <div class="w-3 h-3 bg-[#C70019]"></div>
-                            <span class="text-xs text-gray-400 font-['Inter']">已进入事业部 (13)</span>
-                        </div>
-                        <div class="flex items-center gap-3">
-                            <div class="w-3 h-3 bg-surface-variant"></div>
-                            <span class="text-xs text-gray-400 font-['Inter']">未进入事业部 (10)</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- Approval State -->
-            <div class="bg-surface-container-lowest p-6 flex flex-col">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="text-sm font-bold uppercase tracking-[0.2em] text-white flex items-center gap-2">
-                        <span class="w-2 h-2 bg-tertiary"></span> 当日审批状态
-                    </h3>
-                    <span class="material-symbols-outlined text-gray-600 cursor-pointer">more_horiz</span>
-                </div>
-                <div class="flex items-center justify-around h-48">
-                    <div class="relative w-32 h-32">
-                        <svg class="w-full h-full transform -rotate-90">
-                            <circle class="text-[#201f1f]" cx="64" cy="64" fill="transparent" r="50"
-                                stroke="currentColor" stroke-width="12"></circle>
-                            <circle class="text-tertiary" cx="64" cy="64" fill="transparent" r="50"
-                                stroke="currentColor" stroke-dasharray="314" stroke-dashoffset="100" stroke-width="12">
-                            </circle>
-                        </svg>
-                        <div class="absolute inset-0 flex flex-col items-center justify-center">
-                            <span class="text-2xl font-bold font-['Space_Grotesk']">78%</span>
-                            <span class="text-[8px] text-gray-500 uppercase">已审核</span>
-                        </div>
-                    </div>
-                    <div class="space-y-2">
-                        <div class="flex items-center gap-3">
-                            <div class="w-3 h-3 bg-tertiary"></div>
-                            <span class="text-xs text-gray-400 font-['Inter']">质量技术部 (17)</span>
-                        </div>
-                        <div class="flex items-center gap-3">
-                            <div class="w-3 h-3 bg-error-container"></div>
-                            <span class="text-xs text-gray-400 font-['Inter']">总成车间 (3)</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-        <!-- Technical Table Central Feature -->
-        <section class="bg-surface-container overflow-hidden mb-8">
-            <div
-                class="p-6 border-b border-surface-variant flex justify-between items-center bg-surface-container-high">
-                <h3 class="text-lg font-black uppercase tracking-tighter text-white font-['Space_Grotesk']">
-                    当日相关方申请情况明细
-                </h3>
-                <div class="flex gap-4">
-                    <div class="flex bg-surface-container-lowest px-3 py-1 items-center gap-2">
-                        <span class="material-symbols-outlined text-xs text-gray-500">search</span>
-                        <input
-                            class="bg-transparent border-none focus:ring-0 text-[10px] uppercase tracking-widest text-on-surface w-32 placeholder:text-gray-700"
-                            placeholder="搜索指令" type="text" />
-                    </div>
-                    <button
-                        class="bg-surface-variant px-4 py-1 text-[10px] font-bold uppercase tracking-widest hover:bg-surface-container-highest transition-colors">导出数据</button>
-                </div>
-            </div>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left font-['Inter'] text-sm">
-                    <thead class="bg-surface-container-lowest">
-                        <tr>
-                            <th class="px-6 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-widest">申请人姓名
-                            </th>
-                            <th class="px-6 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-widest">公司名称
-                            </th>
-                            <th class="px-6 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-widest">作业状态
-                            </th>
-                            <th class="px-6 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-widest">
-                                计划开始/完成时间</th>
-                            <th class="px-6 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-widest">作业地点
-                            </th>
-                            <th class="px-6 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-widest">具体作业内容
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-surface-variant/20">
-                        <tr class="hover:bg-surface-container-highest transition-colors group">
-                            <td class="px-6 py-4 font-bold">刘冰涛</td>
-                            <td class="px-6 py-4 text-gray-400">株洲九方装备驱动技术有...</td>
-                            <td class="px-6 py-4">
-                                <span
-                                    class="bg-primary-container/20 text-[#C70019] px-2 py-0.5 text-[10px] font-bold uppercase">已进入事业部</span>
-                            </td>
-                            <td class="px-6 py-4 font-mono text-xs">2026-04-07 / 2026-04-08</td>
-                            <td class="px-6 py-4 text-gray-400">总成车间</td>
-                            <td class="px-6 py-4 text-xs text-gray-500 italic max-w-xs truncate">Q30不合格项整改</td>
-                        </tr>
-                        <tr class="bg-surface-container-low hover:bg-surface-container-highest transition-colors group">
-                            <td class="px-6 py-4 font-bold">刘永吉</td>
-                            <td class="px-6 py-4 text-gray-400">武汉研奥电气有限公司</td>
-                            <td class="px-6 py-4">
-                                <span
-                                    class="bg-primary-container/20 text-[#C70019] px-2 py-0.5 text-[10px] font-bold uppercase">已进入事业部</span>
-                            </td>
-                            <td class="px-6 py-4 font-mono text-xs">2026-04-07 / 2026-04-10</td>
-                            <td class="px-6 py-4 text-gray-400">新调试</td>
-                            <td class="px-6 py-4 text-xs text-gray-500 italic max-w-xs truncate">配合静调作业</td>
-                        </tr>
-                        <tr class="hover:bg-surface-container-highest transition-colors group">
-                            <td class="px-6 py-4 font-bold">廖成旺</td>
-                            <td class="px-6 py-4 text-gray-400">广州联诚轨道装备科技有...</td>
-                            <td class="px-6 py-4">
-                                <span
-                                    class="bg-white/10 text-white px-2 py-0.5 text-[10px] font-bold uppercase">未进入事业部</span>
-                            </td>
-                            <td class="px-6 py-4 font-mono text-xs">2026-04-07 / 2026-04-08</td>
-                            <td class="px-6 py-4 text-gray-400">总成车间</td>
-                            <td class="px-6 py-4 text-xs text-gray-500 italic max-w-xs truncate">Q30不合格项整改</td>
-                        </tr>
-                        <tr class="bg-surface-container-low hover:bg-surface-container-highest transition-colors group">
-                            <td class="px-6 py-4 font-bold">徐英雄</td>
-                            <td class="px-6 py-4 text-gray-400">兰普电器股份有限公司</td>
-                            <td class="px-6 py-4">
-                                <span
-                                    class="bg-white/10 text-white px-2 py-0.5 text-[10px] font-bold uppercase">未进入事业部</span>
-                            </td>
-                            <td class="px-6 py-4 font-mono text-xs">2026-04-07 / 2026-04-10</td>
-                            <td class="px-6 py-4 text-gray-400">总成车间</td>
-                            <td class="px-6 py-4 text-xs text-gray-500 italic max-w-xs truncate">部件装配作业</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            <div
-                class="p-4 bg-surface-container-lowest flex justify-between items-center text-[10px] font-bold uppercase tracking-widest text-gray-600">
-                <span>显示 4/13 条目</span>
-                <div class="flex gap-4">
-                    <button class="hover:text-white transition-colors">上一页</button>
-                    <button class="hover:text-white transition-colors">下一页</button>
-                </div>
-            </div>
-        </section>
-        <!-- Bottom Panels -->
-        <section class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <!-- Stakeholder Activity Comparison -->
-            <div class="bg-surface-container-lowest p-6">
-                <div class="flex justify-between items-center mb-8">
-                    <h3 class="text-sm font-bold uppercase tracking-[0.2em] text-white flex items-center gap-2">
-                        <span class="w-2 h-2 bg-tertiary"></span> 当日总成作业状态
-                    </h3>
-                    <div class="flex gap-2">
-                        <div class="flex items-center gap-1">
-                            <div class="w-2 h-2 bg-tertiary"></div> <span class="text-[8px] text-gray-500">人数</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="h-48 flex items-center justify-center relative">
-                    <div class="w-full flex items-center px-8">
-                        <div
-                            class="w-24 text-[10px] text-gray-500 uppercase tracking-widest border-r border-gray-800 pr-2">
-                            总成车间</div>
-                        <div class="flex-1 h-12 bg-tertiary/20 relative">
-                            <div
-                                class="absolute inset-y-0 left-0 bg-tertiary w-[90%] flex items-center justify-end pr-2">
-                                <span class="text-[10px] font-bold text-on-tertiary">10</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div
-                        class="absolute bottom-0 left-32 right-8 flex justify-between text-[8px] text-gray-600 pt-2 border-t border-gray-800">
-                        <span>0</span><span>2.5</span><span>5</span><span>7.5</span><span>10</span>
-                    </div>
-                </div>
-            </div>
-            <!-- Risk Assessment -->
-            <div class="bg-surface-container-lowest p-6">
-                <div class="flex justify-between items-center mb-8">
-                    <h3 class="text-sm font-bold uppercase tracking-[0.2em] text-white flex items-center gap-2">
-                        <span class="w-2 h-2 bg-[#C70019]"></span> 当日交车作业状态
-                    </h3>
-                    <div class="flex items-center gap-1">
-                        <div class="w-2 h-2 bg-[#C70019]"></div> <span class="text-[8px] text-gray-500">人数</span>
-                    </div>
-                </div>
-                <div class="space-y-4">
-                    <div class="flex items-center">
-                        <div class="w-20 text-[8px] text-gray-500 uppercase">新调试</div>
-                        <div class="flex-1 h-6 bg-surface-variant relative">
-                            <div class="absolute inset-y-0 left-0 bg-[#C70019] w-[80%]"></div>
-                        </div>
-                    </div>
-                    <div class="flex items-center">
-                        <div class="w-20 text-[8px] text-gray-500 uppercase">老调试</div>
-                        <div class="flex-1 h-6 bg-surface-variant relative">
-                            <div class="absolute inset-y-0 left-0 bg-[#C70019] w-[40%]"></div>
-                        </div>
-                    </div>
-                </div>
-                <div class="mt-4 flex justify-between text-[8px] text-gray-600 border-t border-gray-800 pt-2 ml-20">
-                    <span>0</span><span>1</span><span>2</span><span>3</span><span>4</span>
-                </div>
-            </div>
-        </section>
-    </main>
-    <!-- Background Decoration -->
-    <div class="fixed inset-0 pointer-events-none z-[-1] opacity-20">
-        <div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,#201f1f_0%,#131313_100%)]"></div>
-        <div class="absolute top-0 left-0 w-full h-full"
-            style="background-image: linear-gradient(rgba(199,0,25,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(199,0,25,0.05) 1px, transparent 1px); background-size: 50px 50px;">
-        </div>
-    </div>
-</body>
+<body class="min-h-screen p-6 flex flex-col gap-6">
 
+    <!-- Header -->
+    <header class="flex justify-between items-center glass-panel p-4 shadow-ambient z-10">
+        <div class="flex items-center gap-4">
+            <img src="/static/中车.png" alt="中车Logo" class="w-12 h-12 object-contain" />
+            <div>
+                <h1 class="text-3xl font-display font-bold text-white tracking-wider uppercase">生产指挥驾驶舱 相关方安全看板</h1>
+                <p class="text-text-muted text-xs font-display tracking-widest uppercase">城轨制造中心</p>
+            </div>
+        </div>
+
+        <!-- Global Time Search -->
+        <div class="flex gap-1 bg-surface-lowest p-1 rounded-panel">
+            <button
+                class="btn-primary text-white text-sm font-bold px-6 py-2 shadow-glow uppercase cursor-pointer">每日</button>
+            <button
+                class="bg-surface-low text-text-secondary hover:bg-surface-high text-sm px-6 py-2 transition-colors uppercase cursor-pointer rounded-md">每周</button>
+            <button
+                class="bg-surface-low text-text-secondary hover:bg-surface-high text-sm px-6 py-2 transition-colors uppercase cursor-pointer rounded-md">每月</button>
+            <button
+                class="bg-surface-low text-text-secondary hover:bg-surface-high text-sm px-6 py-2 transition-colors uppercase cursor-pointer rounded-md">每季</button>
+            <button
+                class="bg-surface-low text-text-secondary hover:bg-surface-high text-sm px-6 py-2 transition-colors uppercase cursor-pointer rounded-md">每年</button>
+        </div>
+    </header>
+
+    <!-- Main Grid -->
+    <main class="flex-1 grid grid-cols-12 gap-6">
+
+        <!-- Left Column: Status Distributions -->
+        <div class="col-span-3 flex flex-col gap-6">
+            <!-- Overall Status -->
+            <div
+                class="bg-surface-low p-6 shadow-ambient relative group flex-1 min-h-[250px] flex flex-col rounded-panel overflow-hidden">
+                <div
+                    class="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                </div>
+                <h2 class="font-display text-xl mb-2 text-white uppercase tracking-wide">当日作业状态</h2>
+                <div id="chart-overall-status" class="flex-1 w-full min-h-[200px]"></div>
+            </div>
+            <!-- Assembly Status -->
+            <div
+                class="bg-surface-low p-6 shadow-ambient relative group flex-1 min-h-[250px] flex flex-col rounded-panel overflow-hidden">
+                <div
+                    class="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                </div>
+                <h2 class="font-display text-xl mb-2 text-white uppercase tracking-wide">当日总成组装板块状态</h2>
+                <div id="chart-assembly-status" class="flex-1 w-full min-h-[200px]"></div>
+            </div>
+            <!-- Delivery Status -->
+            <div
+                class="bg-surface-low p-6 shadow-ambient relative group flex-1 min-h-[250px] flex flex-col rounded-panel overflow-hidden">
+                <div
+                    class="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                </div>
+                <h2 class="font-display text-xl mb-2 text-white uppercase tracking-wide">当日调试交付板块状态</h2>
+                <div id="chart-delivery-status" class="flex-1 w-full min-h-[200px]"></div>
+            </div>
+        </div>
+
+        <!-- Middle Column: Metrics & Table -->
+        <div class="col-span-6 flex flex-col gap-6">
+
+            <!-- Metrics Grid -->
+            <div class="grid grid-cols-4 gap-4">
+                <div class="bg-surface-low p-4 shadow-ambient border-t-2 border-crrc-red rounded-panel">
+                    <p class="text-text-muted text-[10px] uppercase tracking-wider mb-2">当日作业总人数</p>
+                    <p id="metric-today-total" class="font-display text-4xl text-white">-</p>
+                </div>
+                <div class="bg-surface-low p-4 shadow-ambient rounded-panel">
+                    <p class="text-text-muted text-[10px] uppercase tracking-wider mb-2">当日总成组装人数</p>
+                    <p id="metric-today-assembly" class="font-display text-4xl text-white">-</p>
+                </div>
+                <div class="bg-surface-low p-4 shadow-ambient rounded-panel">
+                    <p class="text-text-muted text-[10px] uppercase tracking-wider mb-2">当日调试交付人数</p>
+                    <p id="metric-today-delivery" class="font-display text-4xl text-white">-</p>
+                </div>
+                <div class="bg-surface-low p-4 shadow-ambient rounded-panel">
+                    <p class="text-text-muted text-[10px] uppercase tracking-wider mb-2">当日厂外作业人数</p>
+                    <p id="metric-today-outside" class="font-display text-4xl text-white">-</p>
+                </div>
+                <div class="bg-surface-low p-4 shadow-ambient border-t-2 border-surface-highest rounded-panel">
+                    <p class="text-text-muted text-[10px] uppercase tracking-wider mb-2">本月作业总人数</p>
+                    <p id="metric-month-total" class="font-display text-4xl text-text-secondary">-</p>
+                </div>
+                <div class="bg-surface-low p-4 shadow-ambient border-t-2 border-surface-highest rounded-panel">
+                    <p class="text-text-muted text-[10px] uppercase tracking-wider mb-2">本月总成组装人数</p>
+                    <p id="metric-month-assembly" class="font-display text-4xl text-text-secondary">-</p>
+                </div>
+                <div class="bg-surface-low p-4 shadow-ambient border-t-2 border-surface-highest rounded-panel">
+                    <p class="text-text-muted text-[10px] uppercase tracking-wider mb-2">本月调试交付人数</p>
+                    <p id="metric-month-delivery" class="font-display text-4xl text-text-secondary">-</p>
+                </div>
+                <div class="bg-surface-low p-4 shadow-ambient border-t-2 border-surface-highest rounded-panel">
+                    <p class="text-text-muted text-[10px] uppercase tracking-wider mb-2">本月厂外作业人数</p>
+                    <p id="metric-month-outside" class="font-display text-4xl text-text-secondary">-</p>
+                </div>
+            </div>
+
+            <!-- Detail Table -->
+            <div class="bg-surface-low shadow-ambient flex-1 flex flex-col relative group overflow-hidden">
+                <!-- Table Title -->
+                <div class="px-6 pt-6 pb-2 flex justify-between items-center z-10">
+                    <h2 class="font-display text-xl text-white uppercase tracking-wide">当日相关方作业明细</h2>
+                </div>
+                <div id="gridjs-wrapper"></div>
+            </div>
+
+        </div>
+
+        <!-- Right Column: Approvals & Hazards -->
+        <div class="col-span-3 flex flex-col gap-6">
+            <!-- Approval Department -->
+            <div
+                class="bg-surface-low p-6 shadow-ambient relative group flex-1 min-h-[250px] flex flex-col rounded-panel overflow-hidden">
+                <div
+                    class="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                </div>
+                <h2 class="font-display text-xl mb-2 text-white uppercase tracking-wide">当日审批部门</h2>
+                <div id="chart-approval-dept" class="flex-1 w-full min-h-[200px]"></div>
+            </div>
+
+            <!-- Approval Contrast -->
+            <div
+                class="bg-surface-low p-6 shadow-ambient relative group flex-1 min-h-[250px] flex flex-col rounded-panel overflow-hidden">
+                <div
+                    class="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                </div>
+                <h2 class="font-display text-xl mb-2 text-white uppercase tracking-wide text-base"
+                    title="申请数据与当日审批数据对比">申请与审批数据对比</h2>
+                <div id="chart-approval-contrast" class="flex-1 w-full min-h-[200px]"></div>
+            </div>
+
+            <!-- Hazardous Operations -->
+            <div
+                class="bg-surface-low p-6 shadow-ambient relative group flex-1 min-h-[250px] flex flex-col rounded-panel overflow-hidden">
+                <div
+                    class="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+                </div>
+                <h2 class="font-display text-xl mb-2 text-white uppercase tracking-wide">危险性作业</h2>
+                <p class="text-[10px] text-text-muted mb-2">点击柱状图查看具体作业信息 (仅显示有数据项)</p>
+                <div id="chart-hazards" class="flex-1 w-full min-h-[180px] cursor-pointer"></div>
+            </div>
+        </div>
+    </main>
+
+    <!-- ECharts Initialization -->
+    <script>
+        // Colors from Design System
+        const COLORS = {
+            working: '#C70019',
+            entered: '#494646',
+            completed: '#2A2A2A',
+            text: '#E2E2E2',
+            textMuted: '#A0A0A0',
+            bg: 'transparent'
+        };
+
+        const commonTextOpts = {
+            color: COLORS.text,
+            fontFamily: 'Inter, sans-serif'
+        };
+
+        const initChart = (id, options) => {
+            const dom = document.getElementById(id);
+            let chart = null;
+            if (dom) {
+                chart = echarts.init(dom, 'dark', { renderer: 'svg' });
+                const baseOptions = {
+                    backgroundColor: COLORS.bg,
+                    textStyle: commonTextOpts,
+                    tooltip: {
+                        backgroundColor: 'rgba(27, 27, 27, 0.95)',
+                        borderColor: '#353535',
+                        textStyle: { color: '#E2E2E2', fontSize: 12 },
+                        padding: [10, 14]
+                    }
+                };
+                chart.setOption(Object.assign({}, baseOptions, options));
+
+                if (id === 'chart-hazards') {
+                    chart.on('click', function (params) {
+                        alert('钻取危险作业详情:\n作业类型: ' + params.name + '\n当前数量: ' + params.value + ' 项');
+                    });
+                }
+
+                window.addEventListener('resize', () => chart.resize());
+            }
+            return chart;
+        };
+
+        // Initial empty charts setup
+        const overallStatusChart = initChart('chart-overall-status', {
+            tooltip: { trigger: 'item', formatter: '{a} <br/>{b}: {c} ({d}%)' },
+            legend: {
+                bottom: '0%',
+                left: 'center',
+                textStyle: { color: COLORS.textMuted, fontSize: 11 },
+                itemWidth: 8, itemHeight: 8
+            },
+            series: [{
+                name: '作业状态',
+                type: 'pie',
+                radius: ['45%', '70%'],
+                center: ['50%', '45%'],
+                avoidLabelOverlap: false,
+                itemStyle: { borderRadius: 0, borderColor: '#1B1B1B', borderWidth: 2 },
+                label: { show: false, position: 'center' },
+                emphasis: { label: { show: true, fontSize: 16, fontWeight: 'bold', color: '#FFF' } },
+                labelLine: { show: false },
+                data: []
+            }]
+        });
+
+        const assemblyStatusChart = initChart('chart-assembly-status', {
+            tooltip: { trigger: 'item', formatter: '{a} <br/>{b}: {c} ({d}%)' },
+            legend: { bottom: '0%', textStyle: { color: COLORS.textMuted, fontSize: 11 }, itemWidth: 8, itemHeight: 8 },
+            series: [{
+                name: '总成组装板块',
+                type: 'pie',
+                radius: ['45%', '70%'],
+                center: ['50%', '45%'],
+                itemStyle: { borderColor: '#1B1B1B', borderWidth: 2 },
+                label: { show: false },
+                emphasis: { label: { show: true, fontSize: 16, fontWeight: 'bold', color: '#FFF' } },
+                data: []
+            }]
+        });
+
+        const deliveryStatusChart = initChart('chart-delivery-status', {
+            tooltip: { trigger: 'item', formatter: '{a} <br/>{b}: {c} ({d}%)' },
+            legend: { bottom: '0%', textStyle: { color: COLORS.textMuted, fontSize: 11 }, itemWidth: 8, itemHeight: 8 },
+            series: [{
+                name: '调试交付板块',
+                type: 'pie',
+                radius: ['45%', '70%'],
+                center: ['50%', '45%'],
+                itemStyle: { borderColor: '#1B1B1B', borderWidth: 2 },
+                label: { show: false },
+                emphasis: { label: { show: true, fontSize: 16, fontWeight: 'bold', color: '#FFF' } },
+                data: []
+            }]
+        });
+
+        const approvalDeptChart = initChart('chart-approval-dept', {
+            tooltip: { trigger: 'item', formatter: '{a} <br/>{b}: {c} ({d}%)' },
+            legend: { bottom: '0%', textStyle: { color: COLORS.textMuted, fontSize: 11 }, itemWidth: 8, itemHeight: 8 },
+            series: [{
+                name: '审批部门',
+                type: 'pie',
+                radius: ['45%', '70%'],
+                center: ['50%', '45%'],
+                itemStyle: { borderColor: '#1B1B1B', borderWidth: 2 },
+                label: { show: false },
+                emphasis: { label: { show: true, fontSize: 16, fontWeight: 'bold', color: '#FFF' } },
+                data: []
+            }]
+        });
+
+        const approvalContrastChart = initChart('chart-approval-contrast', {
+            tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+            grid: { left: '3%', right: '4%', bottom: '5%', top: '15%', containLabel: true },
+            xAxis: {
+                type: 'category',
+                data: [],
+                axisLine: { show: false },
+                axisTick: { show: false },
+                axisLabel: { color: COLORS.textMuted, fontSize: 11 }
+            },
+            yAxis: {
+                type: 'value',
+                splitLine: { lineStyle: { color: '#2A2A2A', type: 'dashed' } },
+                axisLabel: { color: COLORS.textMuted, fontSize: 11 }
+            },
+            series: [{
+                name: '数量',
+                type: 'bar',
+                barWidth: '35%',
+                data: []
+            }]
+        });
+
+        const hazardsChart = initChart('chart-hazards', {
+            tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+            grid: { left: '3%', right: '4%', bottom: '5%', top: '15%', containLabel: true },
+            xAxis: {
+                type: 'category',
+                data: [],
+                axisLine: { show: false },
+                axisTick: { show: false },
+                axisLabel: { color: COLORS.textMuted, interval: 0, fontSize: 11 }
+            },
+            yAxis: {
+                type: 'value',
+                splitLine: { lineStyle: { color: '#2A2A2A', type: 'dashed' } },
+                axisLabel: { color: COLORS.textMuted, fontSize: 11 }
+            },
+            series: [{
+                name: '危险源数量',
+                type: 'bar',
+                barWidth: '35%',
+                itemStyle: { color: '#E2E2E2' },
+                data: []
+            }]
+        });
+
+        // Grid.js Implementation
+        const tableData = [
+            { applicant: '廖成旺', company: '广州联诚物联设备科技有限公司', status: '正在作业', start: '2026-04-07 下午', end: '2026-04-08 下午', location: '总成组装板块', detail: 'Q30不合格预警作业' },
+            { applicant: '蓝萍', company: '株洲精工制造股份有限公司', status: '正在作业', start: '2026-04-07 上午', end: '2026-04-10 上午', location: '调试交付板块', detail: '配合静调作业' },
+            { applicant: '刘水涛', company: '株洲九方装备股份有限公司', status: '已进入', start: '2026-04-07 上午', end: '2026-04-07 下午', location: '总成组装板块', detail: 'Q30不合格预警作业' },
+            { applicant: '刘永吉', company: '武汉研奥电气有限公司', status: '已进入', start: '2026-04-07 上午', end: '2026-04-10 上午', location: '调试交付板块', detail: '配合静调作业' },
+            { applicant: '徐强强', company: '兰普电器股份有限公司', status: '已进入', start: '2026-04-07 上午', end: '2026-04-10 上午', location: '总成组装板块', detail: '部件装配作业' },
+            { applicant: '王建平', company: '深圳伟德远航电器有限公司', status: '作业完成', start: '2026-04-06 上午', end: '2026-04-06 下午', location: '总成组装板块', detail: '部件装配作业' },
+            { applicant: '苏有鹏', company: '石家庄国祥运输设备有限公司', status: '未进入', start: '2026-04-07 下午', end: '2026-04-10 下午', location: '调试交付板块', detail: '配合静调作业' },
+            { applicant: '廖成旺', company: '广州联诚物联设备科技有限公司', status: '正在作业', start: '2026-04-07 下午', end: '2026-04-08 下午', location: '总成组装板块', detail: 'Q30不合格预警作业' },
+            { applicant: '蓝萍', company: '株洲精工制造股份有限公司', status: '正在作业', start: '2026-04-07 上午', end: '2026-04-10 上午', location: '调试交付板块', detail: '配合静调作业' },
+            { applicant: '刘水涛', company: '株洲九方装备股份有限公司', status: '已进入', start: '2026-04-07 上午', end: '2026-04-07 下午', location: '总成组装板块', detail: 'Q30不合格预警作业' },
+            { applicant: '刘永吉', company: '武汉研奥电气有限公司', status: '已进入', start: '2026-04-07 上午', end: '2026-04-10 上午', location: '调试交付板块', detail: '配合静调作业' },
+            { applicant: '徐强强', company: '兰普电器股份有限公司', status: '已进入', start: '2026-04-07 上午', end: '2026-04-10 上午', location: '总成组装板块', detail: '部件装配作业' },
+            { applicant: '王建平', company: '深圳伟德远航电器有限公司', status: '作业完成', start: '2026-04-06 上午', end: '2026-04-06 下午', location: '总成组装板块', detail: '部件装配作业' },
+            { applicant: '苏有鹏', company: '石家庄国祥运输设备有限公司', status: '未进入', start: '2026-04-07 下午', end: '2026-04-10 下午', location: '调试交付板块', detail: '配合静调作业' },
+        ];
+
+        const getStatusChip = (status) => {
+            const baseClass = "chip uppercase tracking-wider";
+            if (status === '正在作业') return `<span class="${baseClass} chip-working">${status}</span>`;
+            if (status === '已进入') return `<span class="${baseClass} chip-entered">${status}</span>`;
+            if (status === '作业完成') return `<span class="${baseClass} chip-completed">${status}</span>`;
+            return `<span class="${baseClass} chip-other">${status}</span>`;
+        };
+
+        const grid = new gridjs.Grid({
+            columns: [
+                {
+                    id: 'applicant',
+                    name: '申请人'
+                },
+                {
+                    id: 'company',
+                    name: '公司名称',
+                    formatter: (cell) => gridjs.html(`<div class="truncate max-w-[120px] text-text-secondary" title="${cell}">${cell}</div>`)
+                },
+                {
+                    id: 'status',
+                    name: '作业状态',
+                    formatter: (cell) => gridjs.html(getStatusChip(cell))
+                },
+                {
+                    id: 'start',
+                    name: '计划开工',
+                    formatter: (cell) => gridjs.html(`<div class="text-text-muted leading-tight">${cell.replace(' ', '<br>')}</div>`)
+                },
+                {
+                    id: 'end',
+                    name: '计划完工',
+                    formatter: (cell) => gridjs.html(`<div class="text-text-muted leading-tight">${cell.replace(' ', '<br>')}</div>`)
+                },
+                {
+                    id: 'location',
+                    name: '作业地点'
+                },
+                {
+                    id: 'detail',
+                    name: '具体作业内容',
+                    formatter: (cell) => gridjs.html(`<div class="truncate max-w-[100px] text-text-secondary" title="${cell}">${cell}</div>`)
+                }
+            ],
+            data: [],
+            // search: true,
+            sort: true,
+            pagination: {
+                enabled: true,
+                limit: 10,
+                summary: false
+            },
+            language: {
+                // search: {
+                //     placeholder: '搜索明细...'
+                // },
+                pagination: {
+                    previous: '上一页',
+                    next: '下一页',
+                    showing: '显示',
+                    results: () => '条结果'
+                },
+                noRecordsFound: '没有找到相关记录'
+            }
+        });
+
+        grid.render(document.getElementById("gridjs-wrapper"));
+
+        // Fetch data from backend
+        async function fetchDashboardData() {
+            try {
+                const response = await fetch('/api/dashboard-data');
+                const data = await response.json();
+
+                // Update Metrics
+                document.getElementById('metric-today-total').innerText = data.metrics.today_total;
+                document.getElementById('metric-today-assembly').innerText = data.metrics.today_assembly;
+                document.getElementById('metric-today-delivery').innerText = data.metrics.today_delivery;
+                document.getElementById('metric-today-outside').innerText = data.metrics.today_outside || '-';
+                
+                document.getElementById('metric-month-total').innerText = data.metrics.month_total;
+                document.getElementById('metric-month-assembly').innerText = data.metrics.month_assembly;
+                document.getElementById('metric-month-delivery').innerText = data.metrics.month_delivery;
+                document.getElementById('metric-month-outside').innerText = data.metrics.month_outside;
+
+                // Update Charts
+                // Setup styling for specific items in charts
+                const styleOverallStatus = data.charts.overall_status.map(item => {
+                    if(item.name === '正在作业') return {...item, itemStyle: { color: COLORS.working, shadowBlur: 10, shadowColor: 'rgba(199, 0, 25, 0.5)' }};
+                    if(item.name === '已进入') return {...item, itemStyle: { color: '#E2E2E2' }};
+                    return {...item, itemStyle: { color: '#353535' }};
+                });
+                overallStatusChart?.setOption({ series: [{ data: styleOverallStatus }] });
+
+                const styleAssemblyStatus = data.charts.assembly_status.map(item => {
+                    if(item.name === '正在作业') return {...item, itemStyle: { color: COLORS.working }};
+                    if(item.name === '已进入') return {...item, itemStyle: { color: '#E2E2E2' }};
+                    return {...item, itemStyle: { color: '#353535' }};
+                });
+                assemblyStatusChart?.setOption({ series: [{ data: styleAssemblyStatus }] });
+
+                const styleDeliveryStatus = data.charts.delivery_status.map(item => {
+                    if(item.name === '正在作业') return {...item, itemStyle: { color: COLORS.working }};
+                    if(item.name === '已进入') return {...item, itemStyle: { color: '#E2E2E2' }};
+                    return {...item, itemStyle: { color: '#353535' }};
+                });
+                deliveryStatusChart?.setOption({ series: [{ data: styleDeliveryStatus }] });
+
+                const styleApprovalDept = data.charts.approval_dept.map(item => {
+                    if(item.name === '质量技术部') return {...item, itemStyle: { color: '#E2E2E2' }};
+                    if(item.name === '总成组装板块') return {...item, itemStyle: { color: '#353535' }};
+                    return {...item, itemStyle: { color: '#494646' }};
+                });
+                approvalDeptChart?.setOption({ series: [{ data: styleApprovalDept }] });
+
+                approvalContrastChart?.setOption({
+                    xAxis: { data: data.charts.approval_contrast.categories },
+                    series: [{
+                        data: [
+                            { value: data.charts.approval_contrast.values[0], itemStyle: { color: '#E2E2E2' } },
+                            { value: data.charts.approval_contrast.values[1], itemStyle: { color: COLORS.working } }
+                        ]
+                    }]
+                });
+
+                hazardsChart?.setOption({
+                    xAxis: { data: data.charts.hazards.categories },
+                    series: [{
+                        data: [
+                            { value: data.charts.hazards.values[0], itemStyle: { color: COLORS.working } },
+                            { value: data.charts.hazards.values[1], itemStyle: { color: '#E2E2E2' } },
+                            { value: data.charts.hazards.values[2], itemStyle: { color: '#353535' } }
+                        ]
+                    }]
+                });
+
+                // Update Grid.js Table
+                grid.updateConfig({
+                    data: data.table_data
+                }).forceRender();
+
+            } catch (error) {
+                console.error("Failed to fetch dashboard data:", error);
+            }
+        }
+
+        // Call the fetch function
+        fetchDashboardData();
+
+    </script>
+</body>
 </html>
