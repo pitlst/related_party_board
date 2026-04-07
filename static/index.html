@@ -306,22 +306,22 @@
             <img src="/static/中车.png" alt="中车Logo" class="w-12 h-12 object-contain" />
             <div>
                 <h1 class="text-3xl font-display font-bold text-white tracking-wider uppercase">生产指挥驾驶舱 相关方安全看板</h1>
-                <p class="text-text-muted text-xs font-display tracking-widest uppercase">城轨制造中心</p>
+                <p class="text-text-muted text-lg font-display tracking-widest uppercase mt-1">城轨制造中心</p>
             </div>
         </div>
 
         <!-- Global Time Search -->
-        <div class="flex gap-1 bg-surface-lowest p-1 rounded-panel">
+        <div id="time-filters" class="flex gap-1 bg-surface-lowest p-1 rounded-panel">
             <button
-                class="btn-primary text-white text-sm font-bold px-6 py-2 shadow-glow uppercase cursor-pointer">每日</button>
+                class="time-filter-btn btn-primary text-white text-sm font-bold px-6 py-2 shadow-glow uppercase cursor-pointer rounded-md">每日</button>
             <button
-                class="bg-surface-low text-text-secondary hover:bg-surface-high text-sm px-6 py-2 transition-colors uppercase cursor-pointer rounded-md">每周</button>
+                class="time-filter-btn bg-surface-low text-text-secondary hover:bg-surface-high text-sm px-6 py-2 transition-colors uppercase cursor-pointer rounded-md">每周</button>
             <button
-                class="bg-surface-low text-text-secondary hover:bg-surface-high text-sm px-6 py-2 transition-colors uppercase cursor-pointer rounded-md">每月</button>
+                class="time-filter-btn bg-surface-low text-text-secondary hover:bg-surface-high text-sm px-6 py-2 transition-colors uppercase cursor-pointer rounded-md">每月</button>
             <button
-                class="bg-surface-low text-text-secondary hover:bg-surface-high text-sm px-6 py-2 transition-colors uppercase cursor-pointer rounded-md">每季</button>
+                class="time-filter-btn bg-surface-low text-text-secondary hover:bg-surface-high text-sm px-6 py-2 transition-colors uppercase cursor-pointer rounded-md">每季</button>
             <button
-                class="bg-surface-low text-text-secondary hover:bg-surface-high text-sm px-6 py-2 transition-colors uppercase cursor-pointer rounded-md">每年</button>
+                class="time-filter-btn bg-surface-low text-text-secondary hover:bg-surface-high text-sm px-6 py-2 transition-colors uppercase cursor-pointer rounded-md">每年</button>
         </div>
     </header>
 
@@ -668,7 +668,6 @@
                 }
             ],
             data: [],
-            // search: true,
             sort: true,
             pagination: {
                 enabled: true,
@@ -676,9 +675,6 @@
                 summary: false
             },
             language: {
-                // search: {
-                //     placeholder: '搜索明细...'
-                // },
                 pagination: {
                     previous: '上一页',
                     next: '下一页',
@@ -771,6 +767,29 @@
 
         // Call the fetch function
         fetchDashboardData();
+
+        // Time Filter Buttons Toggle Logic
+        const timeFilterBtns = document.querySelectorAll('.time-filter-btn');
+        const activeClasses = ['btn-primary', 'text-white', 'font-bold', 'shadow-glow'];
+        const inactiveClasses = ['bg-surface-low', 'text-text-secondary', 'hover:bg-surface-high'];
+
+        timeFilterBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Remove active state from all buttons
+                timeFilterBtns.forEach(b => {
+                    b.classList.remove(...activeClasses);
+                    b.classList.add(...inactiveClasses);
+                });
+
+                // Add active state to clicked button
+                btn.classList.remove(...inactiveClasses);
+                btn.classList.add(...activeClasses);
+
+                // Here you can trigger another data fetch based on the selected time filter
+                // console.log('Selected time filter:', btn.innerText);
+                // fetchDashboardData(btn.innerText); 
+            });
+        });
 
     </script>
 </body>

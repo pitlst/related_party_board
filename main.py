@@ -12,10 +12,8 @@ async def index_html() -> Response:
     html_content = html_path.read_text(encoding="utf-8")
     return Response(content=html_content, media_type="text/html")
 
-@get("/api/dashboard-data")
-async def get_dashboard_data() -> dict:
-    # 模拟从数据库或第三方服务获取的数据
-    return {
+
+template_data = {
         "metrics": {
             "today_total": 17,
             "today_assembly": 13,
@@ -73,6 +71,15 @@ async def get_dashboard_data() -> dict:
             {"applicant": "苏有鹏", "company": "石家庄国祥运输设备有限公司", "status": "未进入", "start": "2026-04-07 下午", "end": "2026-04-10 下午", "location": "调试交付板块", "detail": "配合静调作业"}
         ]
     }
+
+@get("/api/dashboard-data")
+async def get_dashboard_data() -> Response:
+    data = template_data.copy()
+    try:
+        ...
+    except Exception as e:
+        print(e)
+    return Response(content=data, media_type="application/json")
 
 app = Litestar(
     route_handlers=[index_html, get_dashboard_data],
