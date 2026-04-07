@@ -89,10 +89,42 @@ async def get_dashboard_data(time: str = "每日") -> Response:
     # 在这里可以根据 time 参数 (每日, 每周, 每月, 每季, 每年) 从数据库中查询不同的数据
     data = template_data.copy()
     try:
-        ...
+        if time == "每日":
+            data = await process_today(data)
+        elif time == "每周":
+            data = await process_week(data)
+        elif time == "每月":
+            data = await process_month(data)
+        elif time == "每季":
+            data = await process_quarter(data)
+        elif time == "每年":
+            data = await process_year(data)
+        else:
+            data = await process_today(data)
     except Exception as e:
         print(e)
     return Response(content=data, media_type="application/json")
+
+
+async def process_today(data: dict) -> dict:
+    ...
+
+
+async def process_week(data: dict) -> dict:
+    ...
+
+
+async def process_month(data: dict) -> dict:
+    ...
+
+
+async def process_quarter(data: dict) -> dict:
+    ...
+
+
+async def process_year(data: dict) -> dict:
+    ...
+
 
 app = Litestar(
     route_handlers=[index_html, get_dashboard_data],
