@@ -8,8 +8,7 @@ import clickhouse_connect
 mimetypes.add_type("application/javascript", ".js")
 
 client = clickhouse_connect.get_client(
-    # host="10.24.5.59",
-    host="localhost",
+    host="10.24.5.59",
     port=8123,
     username="cheakf",
     password="Swq8855830.",
