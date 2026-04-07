@@ -6,16 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" href="/static/favicon.ico">
     <title>城轨安全相关方看板</title>
-
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap"
-        rel="stylesheet">
-
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="/static/fonts.css" rel="stylesheet">
+    <script src="/static/tailwindcss.js"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -54,13 +46,9 @@
             }
         }
     </script>
-
-    <!-- ECharts -->
-    <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
-
-    <!-- Grid.js -->
-    <link href="https://cdn.jsdelivr.net/npm/gridjs/dist/theme/mermaid.min.css" rel="stylesheet" />
-    <script src="https://cdn.jsdelivr.net/npm/gridjs/dist/gridjs.umd.js"></script>
+    <script src="/static/echarts.min.js"></script>
+    <link href="/static/mermaid.min.css" rel="stylesheet" />
+    <script src="/static/gridjs.umd.js"></script>
 
     <style>
         body {
@@ -702,7 +690,7 @@
                 document.getElementById('metric-today-assembly').innerText = data.metrics.today_assembly;
                 document.getElementById('metric-today-delivery').innerText = data.metrics.today_delivery;
                 document.getElementById('metric-today-outside').innerText = data.metrics.today_outside || '-';
-                
+
                 document.getElementById('metric-month-total').innerText = data.metrics.month_total;
                 document.getElementById('metric-month-assembly').innerText = data.metrics.month_assembly;
                 document.getElementById('metric-month-delivery').innerText = data.metrics.month_delivery;
@@ -711,30 +699,30 @@
                 // Update Charts
                 // Setup styling for specific items in charts
                 const styleOverallStatus = data.charts.overall_status.map(item => {
-                    if(item.name === '正在作业') return {...item, itemStyle: { color: COLORS.working, shadowBlur: 10, shadowColor: 'rgba(199, 0, 25, 0.5)' }};
-                    if(item.name === '已进入') return {...item, itemStyle: { color: '#E2E2E2' }};
-                    return {...item, itemStyle: { color: '#353535' }};
+                    if (item.name === '正在作业') return { ...item, itemStyle: { color: COLORS.working, shadowBlur: 10, shadowColor: 'rgba(199, 0, 25, 0.5)' } };
+                    if (item.name === '已进入') return { ...item, itemStyle: { color: '#E2E2E2' } };
+                    return { ...item, itemStyle: { color: '#353535' } };
                 });
                 overallStatusChart?.setOption({ series: [{ data: styleOverallStatus }] });
 
                 const styleAssemblyStatus = data.charts.assembly_status.map(item => {
-                    if(item.name === '正在作业') return {...item, itemStyle: { color: COLORS.working }};
-                    if(item.name === '已进入') return {...item, itemStyle: { color: '#E2E2E2' }};
-                    return {...item, itemStyle: { color: '#353535' }};
+                    if (item.name === '正在作业') return { ...item, itemStyle: { color: COLORS.working } };
+                    if (item.name === '已进入') return { ...item, itemStyle: { color: '#E2E2E2' } };
+                    return { ...item, itemStyle: { color: '#353535' } };
                 });
                 assemblyStatusChart?.setOption({ series: [{ data: styleAssemblyStatus }] });
 
                 const styleDeliveryStatus = data.charts.delivery_status.map(item => {
-                    if(item.name === '正在作业') return {...item, itemStyle: { color: COLORS.working }};
-                    if(item.name === '已进入') return {...item, itemStyle: { color: '#E2E2E2' }};
-                    return {...item, itemStyle: { color: '#353535' }};
+                    if (item.name === '正在作业') return { ...item, itemStyle: { color: COLORS.working } };
+                    if (item.name === '已进入') return { ...item, itemStyle: { color: '#E2E2E2' } };
+                    return { ...item, itemStyle: { color: '#353535' } };
                 });
                 deliveryStatusChart?.setOption({ series: [{ data: styleDeliveryStatus }] });
 
                 const styleApprovalDept = data.charts.approval_dept.map(item => {
-                    if(item.name === '质量技术部') return {...item, itemStyle: { color: '#E2E2E2' }};
-                    if(item.name === '总成组装板块') return {...item, itemStyle: { color: '#353535' }};
-                    return {...item, itemStyle: { color: '#494646' }};
+                    if (item.name === '质量技术部') return { ...item, itemStyle: { color: '#E2E2E2' } };
+                    if (item.name === '总成组装板块') return { ...item, itemStyle: { color: '#353535' } };
+                    return { ...item, itemStyle: { color: '#494646' } };
                 });
                 approvalDeptChart?.setOption({ series: [{ data: styleApprovalDept }] });
 
@@ -790,10 +778,11 @@
                 btn.classList.add(...activeClasses);
 
                 // Trigger data fetch based on the selected time filter
-                fetchDashboardData(btn.innerText); 
+                fetchDashboardData(btn.innerText);
             });
         });
 
     </script>
 </body>
+
 </html>

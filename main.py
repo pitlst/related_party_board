@@ -3,8 +3,18 @@ import mimetypes
 from litestar import Litestar, get
 from litestar.static_files.config import StaticFilesConfig
 from litestar.response import Response
+import clickhouse_connect
 
 mimetypes.add_type("application/javascript", ".js")
+
+client = clickhouse_connect.get_client(
+    # host="10.24.5.59",
+    host="localhost",
+    port=8123,
+    username="cheakf",
+    password="Swq8855830.",
+    database="default"
+)
 
 
 @get("/")
