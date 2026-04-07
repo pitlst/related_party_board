@@ -688,9 +688,13 @@
         grid.render(document.getElementById("gridjs-wrapper"));
 
         // Fetch data from backend
-        async function fetchDashboardData() {
+        let rawTableData = [];
+        let currentGridInstance = null;
+
+        async function fetchDashboardData(timeFilter = '每日') {
             try {
-                const response = await fetch('/api/dashboard-data');
+                // Append the time filter as a query parameter
+                const response = await fetch(`/api/dashboard-data?time=${encodeURIComponent(timeFilter)}`);
                 const data = await response.json();
 
                 // Update Metrics
@@ -785,9 +789,8 @@
                 btn.classList.remove(...inactiveClasses);
                 btn.classList.add(...activeClasses);
 
-                // Here you can trigger another data fetch based on the selected time filter
-                // console.log('Selected time filter:', btn.innerText);
-                // fetchDashboardData(btn.innerText); 
+                // Trigger data fetch based on the selected time filter
+                fetchDashboardData(btn.innerText); 
             });
         });
 
