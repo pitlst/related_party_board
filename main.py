@@ -103,7 +103,7 @@ async def get_dashboard_data(time: str = "每日") -> Response:
             data = await process_today()
 
         print(1)
-            
+
         total_count_res = client.query_df(
             f"""
 SELECT 
@@ -144,7 +144,6 @@ WHERE bill.Deleted = 0
     AND bill.`作业地点` IN ('库外')
         """)
         data["metrics"]["today_outside"] = int(outside_count_res.iloc[0]["total_count"])
-
 
         month_count_res = client.query_df(
             f"""
@@ -447,6 +446,7 @@ WHERE bill.Deleted = 0
     """)
     data["metrics"]["table_data"] = table_data_res.to_dict(orient="records")
     return data
+
 
 async def process_month() -> dict:
     data = template_data.copy()
