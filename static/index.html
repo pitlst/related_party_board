@@ -323,7 +323,7 @@
                 <div
                     class="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                 </div>
-                <h2 class="font-display text-xl mb-2 text-white uppercase tracking-wide">当日作业状态</h2>
+                <h2 class="font-display text-xl mb-2 text-white uppercase tracking-wide"><span class="dynamic-time-text">当日</span>作业状态</h2>
                 <div id="chart-overall-status" class="flex-1 w-full min-h-[200px]"></div>
             </div>
             <!-- Assembly Status -->
@@ -332,7 +332,7 @@
                 <div
                     class="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                 </div>
-                <h2 class="font-display text-xl mb-2 text-white uppercase tracking-wide">当日总成组装板块状态</h2>
+                <h2 class="font-display text-xl mb-2 text-white uppercase tracking-wide"><span class="dynamic-time-text">当日</span>总成组装板块状态</h2>
                 <div id="chart-assembly-status" class="flex-1 w-full min-h-[200px]"></div>
             </div>
             <!-- Delivery Status -->
@@ -341,7 +341,7 @@
                 <div
                     class="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                 </div>
-                <h2 class="font-display text-xl mb-2 text-white uppercase tracking-wide">当日调试交付板块状态</h2>
+                <h2 class="font-display text-xl mb-2 text-white uppercase tracking-wide"><span class="dynamic-time-text">当日</span>调试交付板块状态</h2>
                 <div id="chart-delivery-status" class="flex-1 w-full min-h-[200px]"></div>
             </div>
         </div>
@@ -352,19 +352,19 @@
             <!-- Metrics Grid -->
             <div class="grid grid-cols-4 gap-4">
                 <div class="bg-surface-low p-4 shadow-ambient border-t-2 border-crrc-red rounded-panel">
-                    <p class="text-text-muted text-[10px] uppercase tracking-wider mb-2">当日作业总人数</p>
+                    <p class="text-text-muted text-[10px] uppercase tracking-wider mb-2"><span class="dynamic-time-text">当日</span>作业总人数</p>
                     <p id="metric-today-total" class="font-display text-4xl text-white">-</p>
                 </div>
                 <div class="bg-surface-low p-4 shadow-ambient rounded-panel">
-                    <p class="text-text-muted text-[10px] uppercase tracking-wider mb-2">当日总成组装人数</p>
+                    <p class="text-text-muted text-[10px] uppercase tracking-wider mb-2"><span class="dynamic-time-text">当日</span>总成组装人数</p>
                     <p id="metric-today-assembly" class="font-display text-4xl text-white">-</p>
                 </div>
                 <div class="bg-surface-low p-4 shadow-ambient rounded-panel">
-                    <p class="text-text-muted text-[10px] uppercase tracking-wider mb-2">当日调试交付人数</p>
+                    <p class="text-text-muted text-[10px] uppercase tracking-wider mb-2"><span class="dynamic-time-text">当日</span>调试交付人数</p>
                     <p id="metric-today-delivery" class="font-display text-4xl text-white">-</p>
                 </div>
                 <div class="bg-surface-low p-4 shadow-ambient rounded-panel">
-                    <p class="text-text-muted text-[10px] uppercase tracking-wider mb-2">当日厂外作业人数</p>
+                    <p class="text-text-muted text-[10px] uppercase tracking-wider mb-2"><span class="dynamic-time-text">当日</span>厂外作业人数</p>
                     <p id="metric-today-outside" class="font-display text-4xl text-white">-</p>
                 </div>
                 <div class="bg-surface-low p-4 shadow-ambient border-t-2 border-surface-highest rounded-panel">
@@ -389,7 +389,7 @@
             <div class="bg-surface-low shadow-ambient flex-1 flex flex-col relative group overflow-hidden">
                 <!-- Table Title -->
                 <div class="px-6 pt-6 pb-2 flex justify-between items-center z-10">
-                    <h2 class="font-display text-xl text-white uppercase tracking-wide">当日相关方作业明细</h2>
+                    <h2 class="font-display text-xl text-white uppercase tracking-wide"><span class="dynamic-time-text">当日</span>相关方作业明细</h2>
                 </div>
                 <div id="gridjs-wrapper"></div>
             </div>
@@ -404,7 +404,7 @@
                 <div
                     class="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                 </div>
-                <h2 class="font-display text-xl mb-2 text-white uppercase tracking-wide">当日审批部门</h2>
+                <h2 class="font-display text-xl mb-2 text-white uppercase tracking-wide"><span class="dynamic-time-text">当日</span>审批部门</h2>
                 <div id="chart-approval-dept" class="flex-1 w-full min-h-[200px]"></div>
             </div>
 
@@ -415,7 +415,7 @@
                     class="absolute inset-0 bg-gradient-to-b from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
                 </div>
                 <h2 class="font-display text-xl mb-2 text-white uppercase tracking-wide text-base"
-                    title="申请数据与当日审批数据对比">申请与审批数据对比</h2>
+                    title="申请数据与当日审批数据对比">申请与<span class="dynamic-time-text">当日</span>审批数据对比</h2>
                 <div id="chart-approval-contrast" class="flex-1 w-full min-h-[200px]"></div>
             </div>
 
@@ -761,6 +761,7 @@
 
         // Time Filter Buttons Toggle Logic
         const timeFilterBtns = document.querySelectorAll('.time-filter-btn');
+        const dynamicTimeTexts = document.querySelectorAll('.dynamic-time-text');
         const activeClasses = ['btn-primary', 'text-white', 'font-bold', 'shadow-glow'];
         const inactiveClasses = ['bg-surface-low', 'text-text-secondary', 'hover:bg-surface-high'];
 
@@ -776,8 +777,20 @@
                 btn.classList.remove(...inactiveClasses);
                 btn.classList.add(...activeClasses);
 
+                // Update all dynamic time text labels
+                const selectedTimeText = btn.innerText;
+                const timePrefix = selectedTimeText === '每日' ? '当日' : 
+                                 selectedTimeText === '每周' ? '本周' :
+                                 selectedTimeText === '每月' ? '本月' :
+                                 selectedTimeText === '每季' ? '本季' :
+                                 selectedTimeText === '每年' ? '当年' : selectedTimeText;
+
+                dynamicTimeTexts.forEach(el => {
+                    el.innerText = timePrefix;
+                });
+
                 // Trigger data fetch based on the selected time filter
-                fetchDashboardData(btn.innerText);
+                fetchDashboardData(selectedTimeText);
             });
         });
 

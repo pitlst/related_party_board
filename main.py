@@ -23,6 +23,7 @@ async def index_html() -> Response:
     return Response(content=html_content, media_type="text/html")
 
 
+# 测试的虚假数据
 template_data = {
     "metrics": {
         "today_total": 17,
@@ -36,8 +37,8 @@ template_data = {
     },
     "charts": {
         "overall_status": [
-            {"value": 2, "name": "正在作业"},
-            {"value": 10, "name": "已进入"},
+            {"value": 2, "name": "临时外出"},
+            {"value": 10, "name": "作业完成"},
             {"value": 5, "name": "作业完成"}
         ],
         "assembly_status": [
@@ -87,43 +88,712 @@ template_data = {
 async def get_dashboard_data(time: str = "每日") -> Response:
     print(f"Received request for time filter: {time}")
     # 在这里可以根据 time 参数 (每日, 每周, 每月, 每季, 每年) 从数据库中查询不同的数据
-    data = template_data.copy()
     try:
         if time == "每日":
-            data = await process_today(data)
+            data = await process_today()
         elif time == "每周":
-            data = await process_week(data)
+            data = await process_week()
         elif time == "每月":
-            data = await process_month(data)
+            data = await process_month()
         elif time == "每季":
-            data = await process_quarter(data)
+            data = await process_quarter()
         elif time == "每年":
-            data = await process_year(data)
+            data = await process_year()
         else:
-            data = await process_today(data)
+            data = await process_today()
+
+            
+        total_count_res = client.query_df(
+            f"""
+SELECT 
+    count(bill.* ) AS total_count
+FROM ods.interested_party_review AS bill FINAL
+WHERE bill.Deleted = 0
+    AND toStartOfDay(bill.`计划开工日期`) = toStartOfDay(now())
+    AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
+        """)
+        data["metrics"]["total_count"] = int(total_count_res.iloc[0]["total_count"])
+        assembly_count_res = client.query_df(
+            f"""
+SELECT 
+    count(bill.* ) AS total_count
+FROM ods.interested_party_review AS bill FINAL
+WHERE bill.Deleted = 0
+    AND toStartOfDay(bill.`计划开工日期`) = toStartOfDay(now())
+    AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域')
+        """)
+        data["metrics"]["today_assembly"] = int(assembly_count_res.iloc[0]["total_count"])
+        delivery_count_res = client.query_df(
+            f"""
+SELECT 
+    count(bill.* ) AS total_count
+FROM ods.interested_party_review AS bill FINAL
+WHERE bill.Deleted = 0
+    AND toStartOfDay(bill.`计划开工日期`) = toStartOfDay(now())
+    AND bill.`作业地点` IN ('新调试', '老调试', '动车组调试基地', '交车车间落车调车区域')
+        """)
+        data["metrics"]["today_delivery"] = int(delivery_count_res.iloc[0]["total_count"])
+        outside_count_res = client.query_df(
+            f"""
+SELECT 
+    count(bill.* ) AS total_count
+FROM ods.interested_party_review AS bill FINAL
+WHERE bill.Deleted = 0
+    AND toStartOfDay(bill.`计划开工日期`) = toStartOfDay(now())
+    AND bill.`作业地点` IN ('库外')
+        """)
+        data["metrics"]["today_outside"] = int(outside_count_res.iloc[0]["total_count"])
+
+
+        month_count_res = client.query_df(
+            f"""
+SELECT 
+    count(bill.* ) AS total_count
+FROM ods.interested_party_review AS bill FINAL
+WHERE bill.Deleted = 0
+    AND date_trunc('month', bill.`计划开工日期`) = date_trunc('month', now())
+    AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
+        """)
+        data["metrics"]["month_count"] = int(month_count_res.iloc[0]["total_count"])
+        month_assembly_count_res = client.query_df(
+            f"""
+SELECT 
+    count(bill.* ) AS total_count
+FROM ods.interested_party_review AS bill FINAL
+WHERE bill.Deleted = 0
+    AND date_trunc('month', bill.`计划开工日期`) = date_trunc('month', now())
+    AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域')
+        """)
+        data["metrics"]["month_assembly"] = int(month_assembly_count_res.iloc[0]["total_count"])
+        month_delivery_count_res = client.query_df(
+            f"""
+SELECT 
+    count(bill.* ) AS total_count
+FROM ods.interested_party_review AS bill FINAL
+WHERE bill.Deleted = 0
+    AND date_trunc('month', bill.`计划开工日期`) = date_trunc('month', now())
+    AND bill.`作业地点` IN ('新调试', '老调试', '动车组调试基地', '交车车间落车调车区域')
+        """)
+        data["metrics"]["month_delivery"] = int(month_delivery_count_res.iloc[0]["total_count"])
+        month_outside_count_res = client.query_df(
+            f"""
+SELECT 
+    count(bill.* ) AS total_count
+FROM ods.interested_party_review AS bill FINAL
+WHERE bill.Deleted = 0
+    AND date_trunc('month', bill.`计划开工日期`) = date_trunc('month', now())
+    AND bill.`作业地点` IN ('库外')
+        """)
+        data["metrics"]["month_outside"] = int(month_outside_count_res.iloc[0]["total_count"])
+
     except Exception as e:
         print(e)
     return Response(content=data, media_type="application/json")
 
 
-async def process_today(data: dict) -> dict:
-    ...
+async def process_today() -> dict:
+    data = template_data.copy()
+    overall_res = client.query_df(
+        f"""
+SELECT 
+    DISTINCT 
+    bill.`作业地点` AS name,
+    count(bill.* ) AS value
+FROM ods.interested_party_review AS bill FINAL
+WHERE bill.Deleted = 0
+    AND toStartOfDay(bill.`计划开工日期`) = toStartOfDay(now())
+    AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
+GROUP BY 
+    bill.`作业状态`
+    """)
+    data["metrics"]["overall"] = overall_res.to_dict(orient="records")
+    overall_assembly_res = client.query_df(
+        f"""
+SELECT 
+    DISTINCT 
+    bill.`作业地点` AS name,
+    count(bill.* ) AS value
+FROM ods.interested_party_review AS bill FINAL
+WHERE bill.Deleted = 0
+    AND toStartOfDay(bill.`计划开工日期`) = toStartOfDay(now())
+    AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域')
+GROUP BY 
+    bill.`作业状态`
+    """)
+    data["metrics"]["assembly_status"] = overall_assembly_res.to_dict(orient="records")
+    overall_delivery_res = client.query_df(
+        f"""
+SELECT 
+    DISTINCT 
+    bill.`作业地点` AS name,
+    count(bill.* ) AS value
+FROM ods.interested_party_review AS bill FINAL
+WHERE bill.Deleted = 0
+    AND toStartOfDay(bill.`计划开工日期`) = toStartOfDay(now())
+    AND bill.`作业地点` IN ('新调试', '老调试', '动车组调试基地', '交车车间落车调车区域')
+GROUP BY 
+    bill.`作业状态`
+    """)
+    data["metrics"]["delivery_status"] = overall_delivery_res.to_dict(orient="records")
+    approval_dept_res = client.query_df(
+        f"""
+SELECT 
+    DISTINCT 
+    bill.`事业部对接人部门` AS name,
+    count(bill.* ) AS value
+FROM ods.interested_party_review AS bill FINAL
+WHERE bill.Deleted = 0
+    AND toStartOfDay(bill.`计划开工日期`) = toStartOfDay(now())
+    AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
+GROUP BY 
+    bill.`事业部对接人部门`
+    """)
+    data["metrics"]["approval_dept"] = approval_dept_res.to_dict(orient="records")
+    approval_contrast_list = []
+    approval_contrast_res = client.query_df(
+        f"""
+SELECT 
+    count(bill.* ) AS value
+FROM ods.interested_party_review AS bill FINAL
+WHERE bill.Deleted = 0
+    AND toStartOfDay(bill.`计划开工日期`) = toStartOfDay(now())
+    AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
+    """)
+    approval_contrast_list.append(int(approval_contrast_res.iloc[0]["value"]))
+    approval_contrast_res = client.query_df(
+        f"""
+SELECT 
+    count(bill.* ) AS value
+FROM ods.interested_party_review AS bill FINAL
+WHERE bill.Deleted = 0
+    AND toStartOfDay(bill.`计划开工日期`) = toStartOfDay(now())
+    AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
+    AND bill.`单据状态` = '已审核'
+    """)
+    approval_contrast_list.append(int(approval_contrast_res.iloc[0]["value"]))
+    data["metrics"]["approval_contrast"]['values'] = approval_contrast_list
+    hazards_res = client.query_df(
+        f"""
+SELECT 
+    DISTINCT 
+    trim(_bill.category) as clean_category,
+    count(*) as values
+FROM (
+    SELECT
+        arrayDistinct(splitByChar(',', trim(bill.`作业危险性`))) as categories
+    FROM ods.interested_party_review AS bill FINAL
+    WHERE bill.Deleted = 0
+        AND toStartOfDay(bill.`计划开工日期`) = toStartOfDay(now())
+        AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
+) AS _bill
+    """)
+    data["metrics"]["hards"]['categories'] = hazards_res["clean_category"].tolist()
+    data["metrics"]["hards"]['values'] = hazards_res["values"].tolist()
+    table_data_res = client.query_df(
+        f"""
+SELECT 
+    DISTINCT
+    bill.`申请人姓名` AS `applicant`,
+    bill.`公司名称` AS `company`,
+    bill.`作业状态` AS `status`,
+    concat(formatDateTime(bill.`计划开工日期`, '%Y-%m-%d %H:%M:%S'), ' ', bill.`计划开工日期上午/下午`) AS `start`,
+    concat(formatDateTime(bill.`计划完工日期`, '%Y-%m-%d %H:%M:%S'), ' ', bill.`计划完工日期上午/下午`) AS `end`,
+    bill.`作业地点` AS `location`,
+    bill.`具体作业内容` AS `detail`
+FROM ods.interested_party_review AS bill FINAL
+WHERE bill.Deleted = 0
+    AND toStartOfDay(bill.`计划开工日期`) = toStartOfDay(now())
+    AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
+    """)
+    data["metrics"]["table_data"] = table_data_res.to_dict(orient="records")
+    return data
 
 
-async def process_week(data: dict) -> dict:
-    ...
+async def process_week() -> dict:
+    data = template_data.copy()
+    overall_res = client.query_df(
+        f"""
+SELECT 
+    DISTINCT 
+    bill.`作业地点` AS name,
+    count(bill.* ) AS value
+FROM ods.interested_party_review AS bill FINAL
+WHERE bill.Deleted = 0
+    AND bill.`计划开工日期` >= toStartOfWeek(today())
+    AND bill.`计划开工日期` < toStartOfWeek(today()) + 7
+    AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
+GROUP BY 
+    bill.`作业状态`
+    """)
+    data["metrics"]["overall"] = overall_res.to_dict(orient="records")
+    overall_assembly_res = client.query_df(
+        f"""
+SELECT 
+    DISTINCT 
+    bill.`作业地点` AS name,
+    count(bill.* ) AS value
+FROM ods.interested_party_review AS bill FINAL
+WHERE bill.Deleted = 0
+    AND bill.`计划开工日期` >= toStartOfWeek(today())
+    AND bill.`计划开工日期` < toStartOfWeek(today()) + 7
+    AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域')
+GROUP BY 
+    bill.`作业状态`
+    """)
+    data["metrics"]["assembly_status"] = overall_assembly_res.to_dict(orient="records")
+    overall_delivery_res = client.query_df(
+        f"""
+SELECT 
+    DISTINCT 
+    bill.`作业地点` AS name,
+    count(bill.* ) AS value
+FROM ods.interested_party_review AS bill FINAL
+WHERE bill.Deleted = 0
+    AND bill.`计划开工日期` >= toStartOfWeek(today())
+    AND bill.`计划开工日期` < toStartOfWeek(today()) + 7
+    AND bill.`作业地点` IN ('新调试', '老调试', '动车组调试基地', '交车车间落车调车区域')
+GROUP BY 
+    bill.`作业状态`
+    """)
+    data["metrics"]["delivery_status"] = overall_delivery_res.to_dict(orient="records")
+    approval_dept_res = client.query_df(
+        f"""
+SELECT 
+    DISTINCT 
+    bill.`事业部对接人部门` AS name,
+    count(bill.* ) AS value
+FROM ods.interested_party_review AS bill FINAL
+WHERE bill.Deleted = 0
+    AND bill.`计划开工日期` >= toStartOfWeek(today())
+    AND bill.`计划开工日期` < toStartOfWeek(today()) + 7
+    AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
+GROUP BY 
+    bill.`事业部对接人部门`
+    """)
+    data["metrics"]["approval_dept"] = approval_dept_res.to_dict(orient="records")
+    approval_contrast_list = []
+    approval_contrast_res = client.query_df(
+        f"""
+SELECT 
+    count(bill.* ) AS value
+FROM ods.interested_party_review AS bill FINAL
+WHERE bill.Deleted = 0
+    AND bill.`计划开工日期` >= toStartOfWeek(today())
+    AND bill.`计划开工日期` < toStartOfWeek(today()) + 7
+    AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
+    """)
+    approval_contrast_list.append(int(approval_contrast_res.iloc[0]["value"]))
+    approval_contrast_res = client.query_df(
+        f"""
+SELECT 
+    count(bill.* ) AS value
+FROM ods.interested_party_review AS bill FINAL
+WHERE bill.Deleted = 0
+    AND bill.`计划开工日期` >= toStartOfWeek(today())
+    AND bill.`计划开工日期` < toStartOfWeek(today()) + 7
+    AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
+    AND bill.`单据状态` = '已审核'
+    """)
+    approval_contrast_list.append(int(approval_contrast_res.iloc[0]["value"]))
+    data["metrics"]["approval_contrast"]['values'] = approval_contrast_list
+    hazards_res = client.query_df(
+        f"""
+SELECT 
+    DISTINCT 
+    trim(_bill.category) as clean_category,
+    count(*) as values
+FROM (
+    SELECT
+        arrayDistinct(splitByChar(',', trim(bill.`作业危险性`))) as categories
+    FROM ods.interested_party_review AS bill FINAL
+    WHERE bill.Deleted = 0
+        AND bill.`计划开工日期` >= toStartOfWeek(today())
+        AND bill.`计划开工日期` < toStartOfWeek(today()) + 7
+        AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
+) AS _bill
+    """)
+    data["metrics"]["hards"]['categories'] = hazards_res["clean_category"].tolist()
+    data["metrics"]["hards"]['values'] = hazards_res["values"].tolist()
+    table_data_res = client.query_df(
+        f"""
+SELECT 
+    DISTINCT
+    bill.`申请人姓名` AS `applicant`,
+    bill.`公司名称` AS `company`,
+    bill.`作业状态` AS `status`,
+    concat(formatDateTime(bill.`计划开工日期`, '%Y-%m-%d %H:%M:%S'), ' ', bill.`计划开工日期上午/下午`) AS `start`,
+    concat(formatDateTime(bill.`计划完工日期`, '%Y-%m-%d %H:%M:%S'), ' ', bill.`计划完工日期上午/下午`) AS `end`,
+    bill.`作业地点` AS `location`,
+    bill.`具体作业内容` AS `detail`
+FROM ods.interested_party_review AS bill FINAL
+WHERE bill.Deleted = 0
+    AND bill.`计划开工日期` >= toStartOfWeek(today())
+    AND bill.`计划开工日期` < toStartOfWeek(today()) + 7
+    AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
+    """)
+    data["metrics"]["table_data"] = table_data_res.to_dict(orient="records")
+    return data
+
+async def process_month() -> dict:
+    data = template_data.copy()
+    overall_res = client.query_df(
+        f"""
+SELECT 
+    DISTINCT 
+    bill.`作业地点` AS name,
+    count(bill.* ) AS value
+FROM ods.interested_party_review AS bill FINAL
+WHERE bill.Deleted = 0
+    AND toStartOfMonth(bill.`计划开工日期`) = toStartOfMonth(today())
+    AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
+GROUP BY 
+    bill.`作业状态`
+    """)
+    data["metrics"]["overall"] = overall_res.to_dict(orient="records")
+    overall_assembly_res = client.query_df(
+        f"""
+SELECT 
+    DISTINCT 
+    bill.`作业地点` AS name,
+    count(bill.* ) AS value
+FROM ods.interested_party_review AS bill FINAL
+WHERE bill.Deleted = 0
+    AND toStartOfMonth(bill.`计划开工日期`) = toStartOfMonth(today())
+    AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域')
+GROUP BY 
+    bill.`作业状态`
+    """)
+    data["metrics"]["assembly_status"] = overall_assembly_res.to_dict(orient="records")
+    overall_delivery_res = client.query_df(
+        f"""
+SELECT 
+    DISTINCT 
+    bill.`作业地点` AS name,
+    count(bill.* ) AS value
+FROM ods.interested_party_review AS bill FINAL
+WHERE bill.Deleted = 0
+    AND toStartOfMonth(bill.`计划开工日期`) = toStartOfMonth(today())
+    AND bill.`作业地点` IN ('新调试', '老调试', '动车组调试基地', '交车车间落车调车区域')
+GROUP BY 
+    bill.`作业状态`
+    """)
+    data["metrics"]["delivery_status"] = overall_delivery_res.to_dict(orient="records")
+    approval_dept_res = client.query_df(
+        f"""
+SELECT 
+    DISTINCT 
+    bill.`事业部对接人部门` AS name,
+    count(bill.* ) AS value
+FROM ods.interested_party_review AS bill FINAL
+WHERE bill.Deleted = 0
+    AND toStartOfMonth(bill.`计划开工日期`) = toStartOfMonth(today())
+    AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
+GROUP BY 
+    bill.`事业部对接人部门`
+    """)
+    data["metrics"]["approval_dept"] = approval_dept_res.to_dict(orient="records")
+    approval_contrast_list = []
+    approval_contrast_res = client.query_df(
+        f"""
+SELECT 
+    count(bill.* ) AS value
+FROM ods.interested_party_review AS bill FINAL
+WHERE bill.Deleted = 0
+    AND toStartOfMonth(bill.`计划开工日期`) = toStartOfMonth(today())
+    AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
+    """)
+    approval_contrast_list.append(int(approval_contrast_res.iloc[0]["value"]))
+    approval_contrast_res = client.query_df(
+        f"""
+SELECT 
+    count(bill.* ) AS value
+FROM ods.interested_party_review AS bill FINAL
+WHERE bill.Deleted = 0
+    AND toStartOfMonth(bill.`计划开工日期`) = toStartOfMonth(today())
+    AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
+    AND bill.`单据状态` = '已审核'
+    """)
+    approval_contrast_list.append(int(approval_contrast_res.iloc[0]["value"]))
+    data["metrics"]["approval_contrast"]['values'] = approval_contrast_list
+    hazards_res = client.query_df(
+        f"""
+SELECT 
+    DISTINCT 
+    trim(_bill.category) as clean_category,
+    count(*) as values
+FROM (
+    SELECT
+        arrayDistinct(splitByChar(',', trim(bill.`作业危险性`))) as categories
+    FROM ods.interested_party_review AS bill FINAL
+    WHERE bill.Deleted = 0
+        AND toStartOfMonth(bill.`计划开工日期`) = toStartOfMonth(today())
+        AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
+) AS _bill
+    """)
+    data["metrics"]["hards"]['categories'] = hazards_res["clean_category"].tolist()
+    data["metrics"]["hards"]['values'] = hazards_res["values"].tolist()
+    table_data_res = client.query_df(
+        f"""
+SELECT 
+    DISTINCT
+    bill.`申请人姓名` AS `applicant`,
+    bill.`公司名称` AS `company`,
+    bill.`作业状态` AS `status`,
+    concat(formatDateTime(bill.`计划开工日期`, '%Y-%m-%d %H:%M:%S'), ' ', bill.`计划开工日期上午/下午`) AS `start`,
+    concat(formatDateTime(bill.`计划完工日期`, '%Y-%m-%d %H:%M:%S'), ' ', bill.`计划完工日期上午/下午`) AS `end`,
+    bill.`作业地点` AS `location`,
+    bill.`具体作业内容` AS `detail`
+FROM ods.interested_party_review AS bill FINAL
+WHERE bill.Deleted = 0
+    AND toStartOfMonth(bill.`计划开工日期`) = toStartOfMonth(today())
+    AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
+    """)
+    data["metrics"]["table_data"] = table_data_res.to_dict(orient="records")
+    return data
 
 
-async def process_month(data: dict) -> dict:
-    ...
+async def process_quarter() -> dict:
+    data = template_data.copy()
+    overall_res = client.query_df(
+        f"""
+SELECT 
+    DISTINCT 
+    bill.`作业地点` AS name,
+    count(bill.* ) AS value
+FROM ods.interested_party_review AS bill FINAL
+WHERE bill.Deleted = 0
+    AND bill.`计划开工日期` >= toStartOfQuarter(now())
+    AND bill.`计划开工日期` < toStartOfQuarter(now() + toIntervalQuarter(1))
+    AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
+GROUP BY 
+    bill.`作业状态`
+    """)
+    data["metrics"]["overall"] = overall_res.to_dict(orient="records")
+    overall_assembly_res = client.query_df(
+        f"""
+SELECT 
+    DISTINCT 
+    bill.`作业地点` AS name,
+    count(bill.* ) AS value
+FROM ods.interested_party_review AS bill FINAL
+WHERE bill.Deleted = 0
+    AND bill.`计划开工日期` >= toStartOfQuarter(now())
+    AND bill.`计划开工日期` < toStartOfQuarter(now() + toIntervalQuarter(1))
+    AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域')
+GROUP BY 
+    bill.`作业状态`
+    """)
+    data["metrics"]["assembly_status"] = overall_assembly_res.to_dict(orient="records")
+    overall_delivery_res = client.query_df(
+        f"""
+SELECT 
+    DISTINCT 
+    bill.`作业地点` AS name,
+    count(bill.* ) AS value
+FROM ods.interested_party_review AS bill FINAL
+WHERE bill.Deleted = 0
+    AND bill.`计划开工日期` >= toStartOfQuarter(now())
+    AND bill.`计划开工日期` < toStartOfQuarter(now() + toIntervalQuarter(1))
+    AND bill.`作业地点` IN ('新调试', '老调试', '动车组调试基地', '交车车间落车调车区域')
+GROUP BY 
+    bill.`作业状态`
+    """)
+    data["metrics"]["delivery_status"] = overall_delivery_res.to_dict(orient="records")
+    approval_dept_res = client.query_df(
+        f"""
+SELECT 
+    DISTINCT 
+    bill.`事业部对接人部门` AS name,
+    count(bill.* ) AS value
+FROM ods.interested_party_review AS bill FINAL
+WHERE bill.Deleted = 0
+    AND bill.`计划开工日期` >= toStartOfQuarter(now())
+    AND bill.`计划开工日期` < toStartOfQuarter(now() + toIntervalQuarter(1))
+    AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
+GROUP BY 
+    bill.`事业部对接人部门`
+    """)
+    data["metrics"]["approval_dept"] = approval_dept_res.to_dict(orient="records")
+    approval_contrast_list = []
+    approval_contrast_res = client.query_df(
+        f"""
+SELECT 
+    count(bill.* ) AS value
+FROM ods.interested_party_review AS bill FINAL
+WHERE bill.Deleted = 0
+    AND bill.`计划开工日期` >= toStartOfQuarter(now())
+    AND bill.`计划开工日期` < toStartOfQuarter(now() + toIntervalQuarter(1))
+    AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
+    """)
+    approval_contrast_list.append(int(approval_contrast_res.iloc[0]["value"]))
+    approval_contrast_res = client.query_df(
+        f"""
+SELECT 
+    count(bill.* ) AS value
+FROM ods.interested_party_review AS bill FINAL
+WHERE bill.Deleted = 0
+    AND bill.`计划开工日期` >= toStartOfQuarter(now())
+    AND bill.`计划开工日期` < toStartOfQuarter(now() + toIntervalQuarter(1))
+    AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
+    AND bill.`单据状态` = '已审核'
+    """)
+    approval_contrast_list.append(int(approval_contrast_res.iloc[0]["value"]))
+    data["metrics"]["approval_contrast"]['values'] = approval_contrast_list
+    hazards_res = client.query_df(
+        f"""
+SELECT 
+    DISTINCT 
+    trim(_bill.category) as clean_category,
+    count(*) as values
+FROM (
+    SELECT
+        arrayDistinct(splitByChar(',', trim(bill.`作业危险性`))) as categories
+    FROM ods.interested_party_review AS bill FINAL
+    WHERE bill.Deleted = 0
+        AND bill.`计划开工日期` >= toStartOfQuarter(now())
+        AND bill.`计划开工日期` < toStartOfQuarter(now() + toIntervalQuarter(1))
+        AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
+) AS _bill
+    """)
+    data["metrics"]["hards"]['categories'] = hazards_res["clean_category"].tolist()
+    data["metrics"]["hards"]['values'] = hazards_res["values"].tolist()
+    table_data_res = client.query_df(
+        f"""
+SELECT 
+    DISTINCT
+    bill.`申请人姓名` AS `applicant`,
+    bill.`公司名称` AS `company`,
+    bill.`作业状态` AS `status`,
+    concat(formatDateTime(bill.`计划开工日期`, '%Y-%m-%d %H:%M:%S'), ' ', bill.`计划开工日期上午/下午`) AS `start`,
+    concat(formatDateTime(bill.`计划完工日期`, '%Y-%m-%d %H:%M:%S'), ' ', bill.`计划完工日期上午/下午`) AS `end`,
+    bill.`作业地点` AS `location`,
+    bill.`具体作业内容` AS `detail`
+FROM ods.interested_party_review AS bill FINAL
+WHERE bill.Deleted = 0
+    AND bill.`计划开工日期` >= toStartOfQuarter(now())
+    AND bill.`计划开工日期` < toStartOfQuarter(now() + toIntervalQuarter(1))
+    AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
+    """)
+    data["metrics"]["table_data"] = table_data_res.to_dict(orient="records")
+    return data
 
 
-async def process_quarter(data: dict) -> dict:
-    ...
-
-
-async def process_year(data: dict) -> dict:
-    ...
+async def process_year() -> dict:
+    data = template_data.copy()
+    overall_res = client.query_df(
+        f"""
+SELECT 
+    DISTINCT 
+    bill.`作业地点` AS name,
+    count(bill.* ) AS value
+FROM ods.interested_party_review AS bill FINAL
+WHERE bill.Deleted = 0
+    AND toYear(bill.`计划开工日期`) = toYear(now())
+    AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
+GROUP BY 
+    bill.`作业状态`
+    """)
+    data["metrics"]["overall"] = overall_res.to_dict(orient="records")
+    overall_assembly_res = client.query_df(
+        f"""
+SELECT 
+    DISTINCT 
+    bill.`作业地点` AS name,
+    count(bill.* ) AS value
+FROM ods.interested_party_review AS bill FINAL
+WHERE bill.Deleted = 0
+    AND toYear(bill.`计划开工日期`) = toYear(now())
+    AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域')
+GROUP BY 
+    bill.`作业状态`
+    """)
+    data["metrics"]["assembly_status"] = overall_assembly_res.to_dict(orient="records")
+    overall_delivery_res = client.query_df(
+        f"""
+SELECT 
+    DISTINCT 
+    bill.`作业地点` AS name,
+    count(bill.* ) AS value
+FROM ods.interested_party_review AS bill FINAL
+WHERE bill.Deleted = 0
+    AND toYear(bill.`计划开工日期`) = toYear(now())
+    AND bill.`作业地点` IN ('新调试', '老调试', '动车组调试基地', '交车车间落车调车区域')
+GROUP BY 
+    bill.`作业状态`
+    """)
+    data["metrics"]["delivery_status"] = overall_delivery_res.to_dict(orient="records")
+    approval_dept_res = client.query_df(
+        f"""
+SELECT 
+    DISTINCT 
+    bill.`事业部对接人部门` AS name,
+    count(bill.* ) AS value
+FROM ods.interested_party_review AS bill FINAL
+WHERE bill.Deleted = 0
+    AND toYear(bill.`计划开工日期`) = toYear(now())
+    AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
+GROUP BY 
+    bill.`事业部对接人部门`
+    """)
+    data["metrics"]["approval_dept"] = approval_dept_res.to_dict(orient="records")
+    approval_contrast_list = []
+    approval_contrast_res = client.query_df(
+        f"""
+SELECT 
+    count(bill.* ) AS value
+FROM ods.interested_party_review AS bill FINAL
+WHERE bill.Deleted = 0
+    AND toYear(bill.`计划开工日期`) = toYear(now())
+    AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
+    """)
+    approval_contrast_list.append(int(approval_contrast_res.iloc[0]["value"]))
+    approval_contrast_res = client.query_df(
+        f"""
+SELECT 
+    count(bill.* ) AS value
+FROM ods.interested_party_review AS bill FINAL
+WHERE bill.Deleted = 0
+    AND toYear(bill.`计划开工日期`) = toYear(now())
+    AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
+    AND bill.`单据状态` = '已审核'
+    """)
+    approval_contrast_list.append(int(approval_contrast_res.iloc[0]["value"]))
+    data["metrics"]["approval_contrast"]['values'] = approval_contrast_list
+    hazards_res = client.query_df(
+        f"""
+SELECT 
+    DISTINCT 
+    trim(_bill.category) as clean_category,
+    count(*) as values
+FROM (
+    SELECT
+        arrayDistinct(splitByChar(',', trim(bill.`作业危险性`))) as categories
+    FROM ods.interested_party_review AS bill FINAL
+    WHERE bill.Deleted = 0
+        AND toYear(bill.`计划开工日期`) = toYear(now())
+        AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
+) AS _bill
+    """)
+    data["metrics"]["hards"]['categories'] = hazards_res["clean_category"].tolist()
+    data["metrics"]["hards"]['values'] = hazards_res["values"].tolist()
+    table_data_res = client.query_df(
+        f"""
+SELECT 
+    DISTINCT
+    bill.`申请人姓名` AS `applicant`,
+    bill.`公司名称` AS `company`,
+    bill.`作业状态` AS `status`,
+    concat(formatDateTime(bill.`计划开工日期`, '%Y-%m-%d %H:%M:%S'), ' ', bill.`计划开工日期上午/下午`) AS `start`,
+    concat(formatDateTime(bill.`计划完工日期`, '%Y-%m-%d %H:%M:%S'), ' ', bill.`计划完工日期上午/下午`) AS `end`,
+    bill.`作业地点` AS `location`,
+    bill.`具体作业内容` AS `detail`
+FROM ods.interested_party_review AS bill FINAL
+WHERE bill.Deleted = 0
+    AND toYear(bill.`计划开工日期`) = toYear(now())
+    AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
+    """)
+    data["metrics"]["table_data"] = table_data_res.to_dict(orient="records")
+    return data
 
 
 app = Litestar(
