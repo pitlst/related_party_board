@@ -277,7 +277,7 @@ WHERE bill.Deleted = 0
 SELECT 
     DISTINCT 
     trim(_bill.category) as clean_category,
-    count(*) as values
+    count(_bill.*) as values
 FROM (
     SELECT
         arrayDistinct(splitByChar(',', trim(bill.`作业危险性`))) as categories
@@ -401,7 +401,7 @@ WHERE bill.Deleted = 0
 SELECT 
     DISTINCT 
     trim(_bill.category) as clean_category,
-    count(*) as values
+    count(_bill.*) as values
 FROM (
     SELECT
         arrayDistinct(splitByChar(',', trim(bill.`作业危险性`))) as categories
@@ -520,7 +520,7 @@ WHERE bill.Deleted = 0
 SELECT 
     DISTINCT 
     trim(_bill.category) as clean_category,
-    count(*) as values
+    count(_bill.*) as values
 FROM (
     SELECT
         arrayDistinct(splitByChar(',', trim(bill.`作业危险性`))) as categories
@@ -644,7 +644,7 @@ WHERE bill.Deleted = 0
 SELECT 
     DISTINCT 
     trim(_bill.category) as clean_category,
-    count(*) as values
+    count(_bill.*) as values
 FROM (
     SELECT
         arrayDistinct(splitByChar(',', trim(bill.`作业危险性`))) as categories
@@ -750,7 +750,7 @@ WHERE bill.Deleted = 0
     approval_contrast_res = client.query_df(
         f"""
 SELECT 
-    count(bill.* ) AS value
+    count(bill.*) AS value
 FROM ods.interested_party_review AS bill FINAL
 WHERE bill.Deleted = 0
     AND toYear(bill.`计划开工日期`) = toYear(now())
@@ -764,7 +764,7 @@ WHERE bill.Deleted = 0
 SELECT 
     DISTINCT 
     trim(_bill.category) as clean_category,
-    count(*) as values
+    count(_bill.*) as values
 FROM (
     SELECT
         arrayDistinct(splitByChar(',', trim(bill.`作业危险性`))) as categories
