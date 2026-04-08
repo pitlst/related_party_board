@@ -102,6 +102,7 @@ async def get_dashboard_data(time: str = "每日") -> Response:
         else:
             data = await process_today()
 
+        print(1)
             
         total_count_res = client.query_df(
             f"""
@@ -193,6 +194,7 @@ WHERE bill.Deleted = 0
 
 async def process_today() -> dict:
     data = template_data.copy()
+    print(0.1)
     overall_res = client.query_df(
         f"""
 SELECT 
@@ -207,6 +209,7 @@ GROUP BY
     bill.`作业状态`
     """)
     data["metrics"]["overall"] = overall_res.to_dict(orient="records")
+    print(0.2)
     overall_assembly_res = client.query_df(
         f"""
 SELECT 
@@ -221,6 +224,7 @@ GROUP BY
     bill.`作业状态`
     """)
     data["metrics"]["assembly_status"] = overall_assembly_res.to_dict(orient="records")
+    print(0.3)
     overall_delivery_res = client.query_df(
         f"""
 SELECT 
@@ -235,6 +239,7 @@ GROUP BY
     bill.`作业状态`
     """)
     data["metrics"]["delivery_status"] = overall_delivery_res.to_dict(orient="records")
+    print(0.4)
     approval_dept_res = client.query_df(
         f"""
 SELECT 
@@ -249,6 +254,7 @@ GROUP BY
     bill.`事业部对接人部门`
     """)
     data["metrics"]["approval_dept"] = approval_dept_res.to_dict(orient="records")
+    print(0.5)
     approval_contrast_list = []
     approval_contrast_res = client.query_df(
         f"""
@@ -260,6 +266,7 @@ WHERE bill.Deleted = 0
     AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
     """)
     approval_contrast_list.append(int(approval_contrast_res.iloc[0]["value"]))
+    print(0.6)
     approval_contrast_res = client.query_df(
         f"""
 SELECT 
@@ -272,6 +279,7 @@ WHERE bill.Deleted = 0
     """)
     approval_contrast_list.append(int(approval_contrast_res.iloc[0]["value"]))
     data["metrics"]["approval_contrast"]['values'] = approval_contrast_list
+    print(0.7)
     hazards_res = client.query_df(
         f"""
 SELECT 
@@ -289,6 +297,7 @@ FROM (
     """)
     data["metrics"]["hards"]['categories'] = hazards_res["clean_category"].tolist()
     data["metrics"]["hards"]['values'] = hazards_res["values"].tolist()
+    print(0.8)
     table_data_res = client.query_df(
         f"""
 SELECT 
@@ -306,6 +315,7 @@ WHERE bill.Deleted = 0
     AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
     """)
     data["metrics"]["table_data"] = table_data_res.to_dict(orient="records")
+    print(0.9)
     return data
 
 
