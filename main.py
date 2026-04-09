@@ -283,7 +283,7 @@ WHERE bill.Deleted = 0
         f"""
 SELECT 
     DISTINCT 
-    trim(_bill.category) as clean_category,
+    trim(_bill.categories) as clean_categories,
     count() as values
 FROM (
     SELECT
