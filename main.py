@@ -107,7 +107,7 @@ async def get_dashboard_data(time: str = "每日") -> Response:
         total_count_res = client.query_df(
             f"""
 SELECT 
-    count(bill.*) AS total_count
+    count() AS total_count
 FROM ods.interested_party_review AS bill FINAL
 WHERE bill.Deleted = 0
     AND toStartOfDay(bill.`计划开工日期`) = toStartOfDay(now())
@@ -117,7 +117,7 @@ WHERE bill.Deleted = 0
         assembly_count_res = client.query_df(
             f"""
 SELECT 
-    count(bill.*) AS total_count
+    count() AS total_count
 FROM ods.interested_party_review AS bill FINAL
 WHERE bill.Deleted = 0
     AND toStartOfDay(bill.`计划开工日期`) = toStartOfDay(now())
@@ -127,7 +127,7 @@ WHERE bill.Deleted = 0
         delivery_count_res = client.query_df(
             f"""
 SELECT 
-    count(bill.*) AS total_count
+    count() AS total_count
 FROM ods.interested_party_review AS bill FINAL
 WHERE bill.Deleted = 0
     AND toStartOfDay(bill.`计划开工日期`) = toStartOfDay(now())
@@ -137,7 +137,7 @@ WHERE bill.Deleted = 0
         outside_count_res = client.query_df(
             f"""
 SELECT 
-    count(bill.*) AS total_count
+    count() AS total_count
 FROM ods.interested_party_review AS bill FINAL
 WHERE bill.Deleted = 0
     AND toStartOfDay(bill.`计划开工日期`) = toStartOfDay(now())
@@ -148,7 +148,7 @@ WHERE bill.Deleted = 0
         month_count_res = client.query_df(
             f"""
 SELECT 
-    count(bill.*) AS total_count
+    count() AS total_count
 FROM ods.interested_party_review AS bill FINAL
 WHERE bill.Deleted = 0
     AND date_trunc('month', bill.`计划开工日期`) = date_trunc('month', now())
@@ -158,7 +158,7 @@ WHERE bill.Deleted = 0
         month_assembly_count_res = client.query_df(
             f"""
 SELECT 
-    count(bill.*) AS total_count
+    count() AS total_count
 FROM ods.interested_party_review AS bill FINAL
 WHERE bill.Deleted = 0
     AND date_trunc('month', bill.`计划开工日期`) = date_trunc('month', now())
@@ -168,7 +168,7 @@ WHERE bill.Deleted = 0
         month_delivery_count_res = client.query_df(
             f"""
 SELECT 
-    count(bill.*) AS total_count
+    count() AS total_count
 FROM ods.interested_party_review AS bill FINAL
 WHERE bill.Deleted = 0
     AND date_trunc('month', bill.`计划开工日期`) = date_trunc('month', now())
@@ -178,7 +178,7 @@ WHERE bill.Deleted = 0
         month_outside_count_res = client.query_df(
             f"""
 SELECT 
-    count(bill.*) AS total_count
+    count() AS total_count
 FROM ods.interested_party_review AS bill FINAL
 WHERE bill.Deleted = 0
     AND date_trunc('month', bill.`计划开工日期`) = date_trunc('month', now())
@@ -199,7 +199,7 @@ async def process_today() -> dict:
 SELECT 
     DISTINCT 
     bill.`作业状态` AS name,
-    count(bill.*) AS value
+    count() AS value
 FROM ods.interested_party_review AS bill FINAL
 WHERE bill.Deleted = 0
     AND toStartOfDay(bill.`计划开工日期`) = toStartOfDay(now())
@@ -214,7 +214,7 @@ GROUP BY
 SELECT 
     DISTINCT 
     bill.`作业状态` AS name,
-    count(bill.*) AS value
+    count() AS value
 FROM ods.interested_party_review AS bill FINAL
 WHERE bill.Deleted = 0
     AND toStartOfDay(bill.`计划开工日期`) = toStartOfDay(now())
@@ -229,7 +229,7 @@ GROUP BY
 SELECT 
     DISTINCT 
     bill.`作业状态` AS name,
-    count(bill.*) AS value
+    count() AS value
 FROM ods.interested_party_review AS bill FINAL
 WHERE bill.Deleted = 0
     AND toStartOfDay(bill.`计划开工日期`) = toStartOfDay(now())
@@ -244,7 +244,7 @@ GROUP BY
 SELECT 
     DISTINCT 
     bill.`事业部对接人部门` AS name,
-    count(bill.*) AS value
+    count() AS value
 FROM ods.interested_party_review AS bill FINAL
 WHERE bill.Deleted = 0
     AND toStartOfDay(bill.`计划开工日期`) = toStartOfDay(now())
@@ -258,7 +258,7 @@ GROUP BY
     approval_contrast_res = client.query_df(
         f"""
 SELECT 
-    count(bill.*) AS value
+    count() AS value
 FROM ods.interested_party_review AS bill FINAL
 WHERE bill.Deleted = 0
     AND toStartOfDay(bill.`计划开工日期`) = toStartOfDay(now())
@@ -269,7 +269,7 @@ WHERE bill.Deleted = 0
     approval_contrast_res = client.query_df(
         f"""
 SELECT 
-    count(bill.*) AS value
+    count() AS value
 FROM ods.interested_party_review AS bill FINAL
 WHERE bill.Deleted = 0
     AND toStartOfDay(bill.`计划开工日期`) = toStartOfDay(now())
@@ -284,7 +284,7 @@ WHERE bill.Deleted = 0
 SELECT 
     DISTINCT 
     trim(_bill.category) as clean_category,
-    count(_bill.*) as values
+    count() as values
 FROM (
     SELECT
         arrayDistinct(splitByChar(',', trim(bill.`作业危险性`))) as categories
@@ -327,7 +327,7 @@ async def process_week() -> dict:
 SELECT 
     DISTINCT 
     bill.`作业状态` AS name,
-    count(bill.*) AS value
+    count() AS value
 FROM ods.interested_party_review AS bill FINAL
 WHERE bill.Deleted = 0
     AND bill.`计划开工日期` >= toStartOfWeek(today())
@@ -342,7 +342,7 @@ GROUP BY
 SELECT 
     DISTINCT 
     bill.`作业状态` AS name,
-    count(bill.*) AS value
+    count() AS value
 FROM ods.interested_party_review AS bill FINAL
 WHERE bill.Deleted = 0
     AND bill.`计划开工日期` >= toStartOfWeek(today())
@@ -357,7 +357,7 @@ GROUP BY
 SELECT 
     DISTINCT 
     bill.`作业状态` AS name,
-    count(bill.*) AS value
+    count() AS value
 FROM ods.interested_party_review AS bill FINAL
 WHERE bill.Deleted = 0
     AND bill.`计划开工日期` >= toStartOfWeek(today())
@@ -372,7 +372,7 @@ GROUP BY
 SELECT 
     DISTINCT 
     bill.`事业部对接人部门` AS name,
-    count(bill.*) AS value
+    count() AS value
 FROM ods.interested_party_review AS bill FINAL
 WHERE bill.Deleted = 0
     AND bill.`计划开工日期` >= toStartOfWeek(today())
@@ -386,7 +386,7 @@ GROUP BY
     approval_contrast_res = client.query_df(
         f"""
 SELECT 
-    count(bill.*) AS value
+    count() AS value
 FROM ods.interested_party_review AS bill FINAL
 WHERE bill.Deleted = 0
     AND bill.`计划开工日期` >= toStartOfWeek(today())
@@ -397,7 +397,7 @@ WHERE bill.Deleted = 0
     approval_contrast_res = client.query_df(
         f"""
 SELECT 
-    count(bill.*) AS value
+    count() AS value
 FROM ods.interested_party_review AS bill FINAL
 WHERE bill.Deleted = 0
     AND bill.`计划开工日期` >= toStartOfWeek(today())
@@ -412,7 +412,7 @@ WHERE bill.Deleted = 0
 SELECT 
     DISTINCT 
     trim(_bill.category) as clean_category,
-    count(_bill.*) as values
+    count() as values
 FROM (
     SELECT
         arrayDistinct(splitByChar(',', trim(bill.`作业危险性`))) as categories
@@ -455,7 +455,7 @@ async def process_month() -> dict:
 SELECT 
     DISTINCT 
     bill.`作业状态` AS name,
-    count(bill.*) AS value
+    count() AS value
 FROM ods.interested_party_review AS bill FINAL
 WHERE bill.Deleted = 0
     AND toStartOfMonth(bill.`计划开工日期`) = toStartOfMonth(today())
@@ -469,7 +469,7 @@ GROUP BY
 SELECT 
     DISTINCT 
     bill.`作业状态` AS name,
-    count(bill.*) AS value
+    count() AS value
 FROM ods.interested_party_review AS bill FINAL
 WHERE bill.Deleted = 0
     AND toStartOfMonth(bill.`计划开工日期`) = toStartOfMonth(today())
@@ -483,7 +483,7 @@ GROUP BY
 SELECT 
     DISTINCT 
     bill.`作业状态` AS name,
-    count(bill.*) AS value
+    count() AS value
 FROM ods.interested_party_review AS bill FINAL
 WHERE bill.Deleted = 0
     AND toStartOfMonth(bill.`计划开工日期`) = toStartOfMonth(today())
@@ -497,7 +497,7 @@ GROUP BY
 SELECT 
     DISTINCT 
     bill.`事业部对接人部门` AS name,
-    count(bill.*) AS value
+    count() AS value
 FROM ods.interested_party_review AS bill FINAL
 WHERE bill.Deleted = 0
     AND toStartOfMonth(bill.`计划开工日期`) = toStartOfMonth(today())
@@ -510,7 +510,7 @@ GROUP BY
     approval_contrast_res = client.query_df(
         f"""
 SELECT 
-    count(bill.*) AS value
+    count() AS value
 FROM ods.interested_party_review AS bill FINAL
 WHERE bill.Deleted = 0
     AND toStartOfMonth(bill.`计划开工日期`) = toStartOfMonth(today())
@@ -520,7 +520,7 @@ WHERE bill.Deleted = 0
     approval_contrast_res = client.query_df(
         f"""
 SELECT 
-    count(bill.*) AS value
+    count() AS value
 FROM ods.interested_party_review AS bill FINAL
 WHERE bill.Deleted = 0
     AND toStartOfMonth(bill.`计划开工日期`) = toStartOfMonth(today())
@@ -534,7 +534,7 @@ WHERE bill.Deleted = 0
 SELECT 
     DISTINCT 
     trim(_bill.category) as clean_category,
-    count(_bill.*) as values
+    count() as values
 FROM (
     SELECT
         arrayDistinct(splitByChar(',', trim(bill.`作业危险性`))) as categories
@@ -575,7 +575,7 @@ async def process_quarter() -> dict:
 SELECT 
     DISTINCT 
     bill.`作业状态` AS name,
-    count(bill.*) AS value
+    count() AS value
 FROM ods.interested_party_review AS bill FINAL
 WHERE bill.Deleted = 0
     AND bill.`计划开工日期` >= toStartOfQuarter(now())
@@ -590,7 +590,7 @@ GROUP BY
 SELECT 
     DISTINCT 
     bill.`作业状态` AS name,
-    count(bill.*) AS value
+    count() AS value
 FROM ods.interested_party_review AS bill FINAL
 WHERE bill.Deleted = 0
     AND bill.`计划开工日期` >= toStartOfQuarter(now())
@@ -605,7 +605,7 @@ GROUP BY
 SELECT 
     DISTINCT 
     bill.`作业状态` AS name,
-    count(bill.*) AS value
+    count() AS value
 FROM ods.interested_party_review AS bill FINAL
 WHERE bill.Deleted = 0
     AND bill.`计划开工日期` >= toStartOfQuarter(now())
@@ -620,7 +620,7 @@ GROUP BY
 SELECT 
     DISTINCT 
     bill.`事业部对接人部门` AS name,
-    count(bill.*) AS value
+    count() AS value
 FROM ods.interested_party_review AS bill FINAL
 WHERE bill.Deleted = 0
     AND bill.`计划开工日期` >= toStartOfQuarter(now())
@@ -634,7 +634,7 @@ GROUP BY
     approval_contrast_res = client.query_df(
         f"""
 SELECT 
-    count(bill.*) AS value
+    count() AS value
 FROM ods.interested_party_review AS bill FINAL
 WHERE bill.Deleted = 0
     AND bill.`计划开工日期` >= toStartOfQuarter(now())
@@ -645,7 +645,7 @@ WHERE bill.Deleted = 0
     approval_contrast_res = client.query_df(
         f"""
 SELECT 
-    count(bill.*) AS value
+    count() AS value
 FROM ods.interested_party_review AS bill FINAL
 WHERE bill.Deleted = 0
     AND bill.`计划开工日期` >= toStartOfQuarter(now())
@@ -660,7 +660,7 @@ WHERE bill.Deleted = 0
 SELECT 
     DISTINCT 
     trim(_bill.category) as clean_category,
-    count(_bill.*) as values
+    count() as values
 FROM (
     SELECT
         arrayDistinct(splitByChar(',', trim(bill.`作业危险性`))) as categories
@@ -703,7 +703,7 @@ async def process_year() -> dict:
 SELECT 
     DISTINCT 
     bill.`作业状态` AS name,
-    count(bill.*) AS value
+    count() AS value
 FROM ods.interested_party_review AS bill FINAL
 WHERE bill.Deleted = 0
     AND toYear(bill.`计划开工日期`) = toYear(now())
@@ -717,7 +717,7 @@ GROUP BY
 SELECT 
     DISTINCT 
     bill.`作业状态` AS name,
-    count(bill.*) AS value
+    count() AS value
 FROM ods.interested_party_review AS bill FINAL
 WHERE bill.Deleted = 0
     AND toYear(bill.`计划开工日期`) = toYear(now())
@@ -731,7 +731,7 @@ GROUP BY
 SELECT 
     DISTINCT 
     bill.`作业状态` AS name,
-    count(bill.*) AS value
+    count() AS value
 FROM ods.interested_party_review AS bill FINAL
 WHERE bill.Deleted = 0
     AND toYear(bill.`计划开工日期`) = toYear(now())
@@ -745,7 +745,7 @@ GROUP BY
 SELECT 
     DISTINCT 
     bill.`事业部对接人部门` AS name,
-    count(bill.*) AS value
+    count() AS value
 FROM ods.interested_party_review AS bill FINAL
 WHERE bill.Deleted = 0
     AND toYear(bill.`计划开工日期`) = toYear(now())
@@ -758,7 +758,7 @@ GROUP BY
     approval_contrast_res = client.query_df(
         f"""
 SELECT 
-    count(bill.*) AS value
+    count() AS value
 FROM ods.interested_party_review AS bill FINAL
 WHERE bill.Deleted = 0
     AND toYear(bill.`计划开工日期`) = toYear(now())
@@ -768,7 +768,7 @@ WHERE bill.Deleted = 0
     approval_contrast_res = client.query_df(
         f"""
 SELECT 
-    count(bill.*) AS value
+    count() AS value
 FROM ods.interested_party_review AS bill FINAL
 WHERE bill.Deleted = 0
     AND toYear(bill.`计划开工日期`) = toYear(now())
@@ -782,7 +782,7 @@ WHERE bill.Deleted = 0
 SELECT 
     DISTINCT 
     trim(_bill.category) as clean_category,
-    count(_bill.*) as values
+    count() as values
 FROM (
     SELECT
         arrayDistinct(splitByChar(',', trim(bill.`作业危险性`))) as categories
