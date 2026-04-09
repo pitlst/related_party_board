@@ -804,11 +804,11 @@
 
                 // Update all dynamic time text labels
                 const selectedTimeText = btn.innerText;
-                const timePrefix = selectedTimeText === '每日' ? '当日' : 
-                                 selectedTimeText === '每周' ? '本周' :
-                                 selectedTimeText === '每月' ? '本月' :
-                                 selectedTimeText === '每季' ? '本季' :
-                                 selectedTimeText === '每年' ? '当年' : selectedTimeText;
+                const timePrefix = selectedTimeText === '本日' ? '当日' : 
+                                 selectedTimeText === '本周' ? '本周' :
+                                 selectedTimeText === '本月' ? '本月' :
+                                 selectedTimeText === '本季' ? '本季' :
+                                 selectedTimeText === '本年' ? '当年' : selectedTimeText;
 
                 dynamicTimeTexts.forEach(el => {
                     el.innerText = timePrefix;

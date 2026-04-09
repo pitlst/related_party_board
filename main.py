@@ -87,22 +87,26 @@ template_data = {
 @get("/api/dashboard-data")
 async def get_dashboard_data(time: str = "每日") -> Response:
     print(f"Received request for time filter: {time}")
-    # 在这里可以根据 time 参数 (每日, 每周, 每月, 每季, 每年) 从数据库中查询不同的数据
+    # 在这里可以根据 time 参数 (每日, 本日, 每周, 本周, 等) 从数据库中查询不同的数据
     try:
-        if time == "每日":
+        if time in ["每日", "本日"]:
             data = await process_today()
-        elif time == "每周":
+            time_filter_sql = "toStartOfDay(bill.`计划开工日期`) = toStartOfDay(now())"
+        elif time in ["每周", "本周"]:
             data = await process_week()
-        elif time == "每月":
+            time_filter_sql = "bill.`计划开工日期` >= toStartOfWeek(today()) AND bill.`计划开工日期` < toStartOfWeek(today()) + 7"
+        elif time in ["每月", "本月"]:
             data = await process_month()
-        elif time == "每季":
+            time_filter_sql = "toStartOfMonth(bill.`计划开工日期`) = toStartOfMonth(today())"
+        elif time in ["每季", "本季"]:
             data = await process_quarter()
-        elif time == "每年":
+            time_filter_sql = "bill.`计划开工日期` >= toStartOfQuarter(now()) AND bill.`计划开工日期` < toStartOfQuarter(now() + toIntervalQuarter(1))"
+        elif time in ["每年", "本年"]:
             data = await process_year()
+            time_filter_sql = "toYear(bill.`计划开工日期`) = toYear(now())"
         else:
             data = await process_today()
-
-        print(1)
+            time_filter_sql = "toStartOfDay(bill.`计划开工日期`) = toStartOfDay(now())"
 
         total_count_res = client.query_df(
             f"""
@@ -110,17 +114,17 @@ SELECT
     count() AS total_count
 FROM ods.interested_party_review AS bill FINAL
 WHERE bill.Deleted = 0
-    AND toStartOfDay(bill.`计划开工日期`) = toStartOfDay(now())
+    AND {time_filter_sql}
     AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
         """)
-        data["metrics"]["total_count"] = int(total_count_res.iloc[0]["total_count"])
+        data["metrics"]["today_total"] = int(total_count_res.iloc[0]["total_count"])
         assembly_count_res = client.query_df(
             f"""
 SELECT 
     count() AS total_count
 FROM ods.interested_party_review AS bill FINAL
 WHERE bill.Deleted = 0
-    AND toStartOfDay(bill.`计划开工日期`) = toStartOfDay(now())
+    AND {time_filter_sql}
     AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域')
         """)
         data["metrics"]["today_assembly"] = int(assembly_count_res.iloc[0]["total_count"])
@@ -130,7 +134,7 @@ SELECT
     count() AS total_count
 FROM ods.interested_party_review AS bill FINAL
 WHERE bill.Deleted = 0
-    AND toStartOfDay(bill.`计划开工日期`) = toStartOfDay(now())
+    AND {time_filter_sql}
     AND bill.`作业地点` IN ('新调试', '老调试', '动车组调试基地', '交车车间落车调车区域')
         """)
         data["metrics"]["today_delivery"] = int(delivery_count_res.iloc[0]["total_count"])
@@ -140,7 +144,7 @@ SELECT
     count() AS total_count
 FROM ods.interested_party_review AS bill FINAL
 WHERE bill.Deleted = 0
-    AND toStartOfDay(bill.`计划开工日期`) = toStartOfDay(now())
+    AND {time_filter_sql}
     AND bill.`作业地点` IN ('库外')
         """)
         data["metrics"]["today_outside"] = int(outside_count_res.iloc[0]["total_count"])
@@ -151,17 +155,17 @@ SELECT
     count() AS total_count
 FROM ods.interested_party_review AS bill FINAL
 WHERE bill.Deleted = 0
-    AND date_trunc('month', bill.`计划开工日期`) = date_trunc('month', now())
+    AND toStartOfMonth(bill.`计划开工日期`) = toStartOfMonth(now())
     AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
         """)
-        data["metrics"]["month_count"] = int(month_count_res.iloc[0]["total_count"])
+        data["metrics"]["month_total"] = int(month_count_res.iloc[0]["total_count"])
         month_assembly_count_res = client.query_df(
             f"""
 SELECT 
     count() AS total_count
 FROM ods.interested_party_review AS bill FINAL
 WHERE bill.Deleted = 0
-    AND date_trunc('month', bill.`计划开工日期`) = date_trunc('month', now())
+    AND toStartOfMonth(bill.`计划开工日期`) = toStartOfMonth(now())
     AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域')
         """)
         data["metrics"]["month_assembly"] = int(month_assembly_count_res.iloc[0]["total_count"])
@@ -171,7 +175,7 @@ SELECT
     count() AS total_count
 FROM ods.interested_party_review AS bill FINAL
 WHERE bill.Deleted = 0
-    AND date_trunc('month', bill.`计划开工日期`) = date_trunc('month', now())
+    AND toStartOfMonth(bill.`计划开工日期`) = toStartOfMonth(now())
     AND bill.`作业地点` IN ('新调试', '老调试', '动车组调试基地', '交车车间落车调车区域')
         """)
         data["metrics"]["month_delivery"] = int(month_delivery_count_res.iloc[0]["total_count"])
@@ -181,7 +185,7 @@ SELECT
     count() AS total_count
 FROM ods.interested_party_review AS bill FINAL
 WHERE bill.Deleted = 0
-    AND date_trunc('month', bill.`计划开工日期`) = date_trunc('month', now())
+    AND toStartOfMonth(bill.`计划开工日期`) = toStartOfMonth(now())
     AND bill.`作业地点` IN ('库外')
         """)
         data["metrics"]["month_outside"] = int(month_outside_count_res.iloc[0]["total_count"])
@@ -193,7 +197,6 @@ WHERE bill.Deleted = 0
 
 async def process_today() -> dict:
     data = template_data.copy()
-    print(0.1)
     overall_res = client.query_df(
         f"""
 SELECT 
@@ -208,7 +211,6 @@ GROUP BY
     bill.`作业状态`
     """)
     data["charts"]["overall_status"] = overall_res.to_dict(orient="records")
-    print(0.2)
     overall_assembly_res = client.query_df(
         f"""
 SELECT 
@@ -223,7 +225,6 @@ GROUP BY
     bill.`作业状态`
     """)
     data["charts"]["assembly_status"] = overall_assembly_res.to_dict(orient="records")
-    print(0.3)
     overall_delivery_res = client.query_df(
         f"""
 SELECT 
@@ -238,7 +239,6 @@ GROUP BY
     bill.`作业状态`
     """)
     data["charts"]["delivery_status"] = overall_delivery_res.to_dict(orient="records")
-    print(0.4)
     approval_dept_res = client.query_df(
         f"""
 SELECT 
@@ -253,7 +253,6 @@ GROUP BY
     bill.`事业部对接人部门`
     """)
     data["charts"]["approval_dept"] = approval_dept_res.to_dict(orient="records")
-    print(0.5)
     approval_contrast_list = []
     approval_contrast_res = client.query_df(
         f"""
@@ -265,7 +264,6 @@ WHERE bill.Deleted = 0
     AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
     """)
     approval_contrast_list.append(int(approval_contrast_res.iloc[0]["value"]))
-    print(0.6)
     approval_contrast_res = client.query_df(
         f"""
 SELECT 
@@ -278,7 +276,6 @@ WHERE bill.Deleted = 0
     """)
     approval_contrast_list.append(int(approval_contrast_res.iloc[0]["value"]))
     data["charts"]["approval_contrast"]['values'] = approval_contrast_list
-    print(0.7)
     hazards_res = client.query_df(
         f"""
 SELECT 
@@ -302,7 +299,6 @@ GROUP BY clean_category
     """)
     data["charts"]["hazards"]['categories'] = hazards_res["clean_category"].tolist()
     data["charts"]["hazards"]['values'] = hazards_res["values"].tolist()
-    print(0.8)
     table_data_res = client.query_df(
         f"""
 SELECT 
@@ -320,7 +316,6 @@ WHERE bill.Deleted = 0
     AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
     """)
     data["table_data"] = table_data_res.to_dict(orient="records")
-    print(0.9)
     return data
 
 
