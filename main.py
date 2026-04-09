@@ -282,19 +282,23 @@ WHERE bill.Deleted = 0
     hazards_res = client.query_df(
         f"""
 SELECT 
-    DISTINCT 
-    trim(_bill.categories) as clean_categories,
+    trim(category) as clean_categories,
     count() as values
 FROM (
     SELECT
-        arrayDistinct(splitByChar(',', trim(bill.`作业危险性`))) as categories
+        arrayJoin(
+            arrayDistinct(
+                arrayMap(x -> trim(x), 
+                    splitByChar(',', trim(bill.`作业危险性`))
+                )
+            )
+        ) as category
     FROM ods.interested_party_review AS bill FINAL
     WHERE bill.Deleted = 0
         AND toStartOfDay(bill.`计划开工日期`) = toStartOfDay(now())
         AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
 ) AS _bill
-GROUP BY 
-    _bill.category
+GROUP BY clean_categories
     """)
     data["charts"]["hazards"]['categories'] = hazards_res["clean_category"].tolist()
     data["charts"]["hazards"]['values'] = hazards_res["values"].tolist()
@@ -336,7 +340,7 @@ WHERE bill.Deleted = 0
 GROUP BY 
     bill.`作业状态`
     """)
-    data["metrics"]["overall"] = overall_res.to_dict(orient="records")
+    data["charts"]["overall_status"] = overall_res.to_dict(orient="records")
     overall_assembly_res = client.query_df(
         f"""
 SELECT 
@@ -351,7 +355,7 @@ WHERE bill.Deleted = 0
 GROUP BY 
     bill.`作业状态`
     """)
-    data["metrics"]["assembly_status"] = overall_assembly_res.to_dict(orient="records")
+    data["charts"]["assembly_status"] = overall_assembly_res.to_dict(orient="records")
     overall_delivery_res = client.query_df(
         f"""
 SELECT 
@@ -366,7 +370,7 @@ WHERE bill.Deleted = 0
 GROUP BY 
     bill.`作业状态`
     """)
-    data["metrics"]["delivery_status"] = overall_delivery_res.to_dict(orient="records")
+    data["charts"]["delivery_status"] = overall_delivery_res.to_dict(orient="records")
     approval_dept_res = client.query_df(
         f"""
 SELECT 
@@ -381,7 +385,7 @@ WHERE bill.Deleted = 0
 GROUP BY 
     bill.`事业部对接人部门`
     """)
-    data["metrics"]["approval_dept"] = approval_dept_res.to_dict(orient="records")
+    data["charts"]["approval_dept"] = approval_dept_res.to_dict(orient="records")
     approval_contrast_list = []
     approval_contrast_res = client.query_df(
         f"""
@@ -406,7 +410,7 @@ WHERE bill.Deleted = 0
     AND bill.`单据状态` = '已审核'
     """)
     approval_contrast_list.append(int(approval_contrast_res.iloc[0]["value"]))
-    data["metrics"]["approval_contrast"]['values'] = approval_contrast_list
+    data["charts"]["approval_contrast"]['values'] = approval_contrast_list
     hazards_res = client.query_df(
         f"""
 SELECT 
@@ -425,8 +429,8 @@ FROM (
 GROUP BY 
     _bill.category
     """)
-    data["metrics"]["hards"]['categories'] = hazards_res["clean_category"].tolist()
-    data["metrics"]["hards"]['values'] = hazards_res["values"].tolist()
+    data["charts"]["hazards"]['categories'] = hazards_res["clean_category"].tolist()
+    data["charts"]["hazards"]['values'] = hazards_res["values"].tolist()
     table_data_res = client.query_df(
         f"""
 SELECT 
@@ -444,7 +448,7 @@ WHERE bill.Deleted = 0
     AND bill.`计划开工日期` < toStartOfWeek(today()) + 7
     AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
     """)
-    data["metrics"]["table_data"] = table_data_res.to_dict(orient="records")
+    data["table_data"] = table_data_res.to_dict(orient="records")
     return data
 
 
@@ -463,7 +467,7 @@ WHERE bill.Deleted = 0
 GROUP BY 
     bill.`作业状态`
     """)
-    data["metrics"]["overall"] = overall_res.to_dict(orient="records")
+    data["charts"]["overall_status"] = overall_res.to_dict(orient="records")
     overall_assembly_res = client.query_df(
         f"""
 SELECT 
@@ -477,7 +481,7 @@ WHERE bill.Deleted = 0
 GROUP BY 
     bill.`作业状态`
     """)
-    data["metrics"]["assembly_status"] = overall_assembly_res.to_dict(orient="records")
+    data["charts"]["assembly_status"] = overall_assembly_res.to_dict(orient="records")
     overall_delivery_res = client.query_df(
         f"""
 SELECT 
@@ -491,7 +495,7 @@ WHERE bill.Deleted = 0
 GROUP BY 
     bill.`作业状态`
     """)
-    data["metrics"]["delivery_status"] = overall_delivery_res.to_dict(orient="records")
+    data["charts"]["delivery_status"] = overall_delivery_res.to_dict(orient="records")
     approval_dept_res = client.query_df(
         f"""
 SELECT 
@@ -505,7 +509,7 @@ WHERE bill.Deleted = 0
 GROUP BY 
     bill.`事业部对接人部门`
     """)
-    data["metrics"]["approval_dept"] = approval_dept_res.to_dict(orient="records")
+    data["charts"]["approval_dept"] = approval_dept_res.to_dict(orient="records")
     approval_contrast_list = []
     approval_contrast_res = client.query_df(
         f"""
@@ -528,7 +532,7 @@ WHERE bill.Deleted = 0
     AND bill.`单据状态` = '已审核'
     """)
     approval_contrast_list.append(int(approval_contrast_res.iloc[0]["value"]))
-    data["metrics"]["approval_contrast"]['values'] = approval_contrast_list
+    data["charts"]["approval_contrast"]['values'] = approval_contrast_list
     hazards_res = client.query_df(
         f"""
 SELECT 
@@ -546,8 +550,8 @@ FROM (
 GROUP BY 
     _bill.category
     """)
-    data["metrics"]["hards"]['categories'] = hazards_res["clean_category"].tolist()
-    data["metrics"]["hards"]['values'] = hazards_res["values"].tolist()
+    data["charts"]["hazards"]['categories'] = hazards_res["clean_category"].tolist()
+    data["charts"]["hazards"]['values'] = hazards_res["values"].tolist()
     table_data_res = client.query_df(
         f"""
 SELECT 
@@ -564,7 +568,7 @@ WHERE bill.Deleted = 0
     AND toStartOfMonth(bill.`计划开工日期`) = toStartOfMonth(today())
     AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
     """)
-    data["metrics"]["table_data"] = table_data_res.to_dict(orient="records")
+    data["table_data"] = table_data_res.to_dict(orient="records")
     return data
 
 
@@ -584,7 +588,7 @@ WHERE bill.Deleted = 0
 GROUP BY 
     bill.`作业状态`
     """)
-    data["metrics"]["overall"] = overall_res.to_dict(orient="records")
+    data["charts"]["overall_status"] = overall_res.to_dict(orient="records")
     overall_assembly_res = client.query_df(
         f"""
 SELECT 
@@ -599,7 +603,7 @@ WHERE bill.Deleted = 0
 GROUP BY 
     bill.`作业状态`
     """)
-    data["metrics"]["assembly_status"] = overall_assembly_res.to_dict(orient="records")
+    data["charts"]["assembly_status"] = overall_assembly_res.to_dict(orient="records")
     overall_delivery_res = client.query_df(
         f"""
 SELECT 
@@ -614,7 +618,7 @@ WHERE bill.Deleted = 0
 GROUP BY 
     bill.`作业状态`
     """)
-    data["metrics"]["delivery_status"] = overall_delivery_res.to_dict(orient="records")
+    data["charts"]["delivery_status"] = overall_delivery_res.to_dict(orient="records")
     approval_dept_res = client.query_df(
         f"""
 SELECT 
@@ -629,7 +633,7 @@ WHERE bill.Deleted = 0
 GROUP BY 
     bill.`事业部对接人部门`
     """)
-    data["metrics"]["approval_dept"] = approval_dept_res.to_dict(orient="records")
+    data["charts"]["approval_dept"] = approval_dept_res.to_dict(orient="records")
     approval_contrast_list = []
     approval_contrast_res = client.query_df(
         f"""
@@ -654,7 +658,7 @@ WHERE bill.Deleted = 0
     AND bill.`单据状态` = '已审核'
     """)
     approval_contrast_list.append(int(approval_contrast_res.iloc[0]["value"]))
-    data["metrics"]["approval_contrast"]['values'] = approval_contrast_list
+    data["charts"]["approval_contrast"]['values'] = approval_contrast_list
     hazards_res = client.query_df(
         f"""
 SELECT 
@@ -673,8 +677,8 @@ FROM (
 GROUP BY 
     _bill.category
     """)
-    data["metrics"]["hards"]['categories'] = hazards_res["clean_category"].tolist()
-    data["metrics"]["hards"]['values'] = hazards_res["values"].tolist()
+    data["charts"]["hazards"]['categories'] = hazards_res["clean_category"].tolist()
+    data["charts"]["hazards"]['values'] = hazards_res["values"].tolist()
     table_data_res = client.query_df(
         f"""
 SELECT 
@@ -692,7 +696,7 @@ WHERE bill.Deleted = 0
     AND bill.`计划开工日期` < toStartOfQuarter(now() + toIntervalQuarter(1))
     AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
     """)
-    data["metrics"]["table_data"] = table_data_res.to_dict(orient="records")
+    data["table_data"] = table_data_res.to_dict(orient="records")
     return data
 
 
@@ -711,7 +715,7 @@ WHERE bill.Deleted = 0
 GROUP BY 
     bill.`作业状态`
     """)
-    data["metrics"]["overall"] = overall_res.to_dict(orient="records")
+    data["charts"]["overall_status"] = overall_res.to_dict(orient="records")
     overall_assembly_res = client.query_df(
         f"""
 SELECT 
@@ -725,7 +729,7 @@ WHERE bill.Deleted = 0
 GROUP BY 
     bill.`作业状态`
     """)
-    data["metrics"]["assembly_status"] = overall_assembly_res.to_dict(orient="records")
+    data["charts"]["assembly_status"] = overall_assembly_res.to_dict(orient="records")
     overall_delivery_res = client.query_df(
         f"""
 SELECT 
@@ -739,7 +743,7 @@ WHERE bill.Deleted = 0
 GROUP BY 
     bill.`作业状态`
     """)
-    data["metrics"]["delivery_status"] = overall_delivery_res.to_dict(orient="records")
+    data["charts"]["delivery_status"] = overall_delivery_res.to_dict(orient="records")
     approval_dept_res = client.query_df(
         f"""
 SELECT 
@@ -753,7 +757,7 @@ WHERE bill.Deleted = 0
 GROUP BY 
     bill.`事业部对接人部门`
     """)
-    data["metrics"]["approval_dept"] = approval_dept_res.to_dict(orient="records")
+    data["charts"]["approval_dept"] = approval_dept_res.to_dict(orient="records")
     approval_contrast_list = []
     approval_contrast_res = client.query_df(
         f"""
@@ -776,7 +780,7 @@ WHERE bill.Deleted = 0
     AND bill.`单据状态` = '已审核'
     """)
     approval_contrast_list.append(int(approval_contrast_res.iloc[0]["value"]))
-    data["metrics"]["approval_contrast"]['values'] = approval_contrast_list
+    data["charts"]["approval_contrast"]['values'] = approval_contrast_list
     hazards_res = client.query_df(
         f"""
 SELECT 
@@ -794,8 +798,8 @@ FROM (
 GROUP BY 
     _bill.category
     """)
-    data["metrics"]["hards"]['categories'] = hazards_res["clean_category"].tolist()
-    data["metrics"]["hards"]['values'] = hazards_res["values"].tolist()
+    data["charts"]["hazards"]['categories'] = hazards_res["clean_category"].tolist()
+    data["charts"]["hazards"]['values'] = hazards_res["values"].tolist()
     table_data_res = client.query_df(
         f"""
 SELECT 
@@ -812,7 +816,7 @@ WHERE bill.Deleted = 0
     AND toYear(bill.`计划开工日期`) = toYear(now())
     AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
     """)
-    data["metrics"]["table_data"] = table_data_res.to_dict(orient="records")
+    data["table_data"] = table_data_res.to_dict(orient="records")
     return data
 
 
