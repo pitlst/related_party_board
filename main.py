@@ -295,6 +295,7 @@ FROM (
         AND toStartOfDay(bill.`计划开工日期`) = toStartOfDay(now())
         AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
 ) AS _bill
+WHERE _bill.category IS NOT NULL AND _bill.category <> ''
 GROUP BY clean_category
     """)
     data["charts"]["hazards"]['categories'] = hazards_res["clean_category"].tolist()
@@ -551,6 +552,7 @@ FROM (
         AND toStartOfMonth(bill.`计划开工日期`) = toStartOfMonth(today())
         AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
 ) AS _bill
+WHERE _bill.category IS NOT NULL AND _bill.category <> ''
 GROUP BY clean_category
     """)
     data["charts"]["hazards"]['categories'] = hazards_res["clean_category"].tolist()
@@ -682,6 +684,7 @@ FROM (
         AND bill.`计划开工日期` < toStartOfQuarter(now() + toIntervalQuarter(1))
         AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
 ) AS _bill
+WHERE _bill.category IS NOT NULL AND _bill.category <> ''
 GROUP BY clean_category
     """)
     data["charts"]["hazards"]['categories'] = hazards_res["clean_category"].tolist()
@@ -807,6 +810,7 @@ FROM (
         AND toYear(bill.`计划开工日期`) = toYear(now())
         AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
 ) AS _bill
+WHERE _bill.category IS NOT NULL AND _bill.category <> ''
 GROUP BY clean_category
     """)
     data["charts"]["hazards"]['categories'] = hazards_res["clean_category"].tolist()
