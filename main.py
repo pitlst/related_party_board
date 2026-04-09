@@ -310,8 +310,8 @@ SELECT
     bill.`申请人姓名` AS `applicant`,
     bill.`公司名称` AS `company`,
     bill.`作业状态` AS `status`,
-    concat(formatDateTime(bill.`计划开工日期`, '%Y-%m-%d %H:%M:%S'), ' ', bill.`计划开工日期上午/下午`) AS `start`,
-    concat(formatDateTime(bill.`计划完工日期`, '%Y-%m-%d %H:%M:%S'), ' ', bill.`计划完工日期上午/下午`) AS `end`,
+    concat(formatDateTime(bill.`计划开工日期`, '%Y-%m-%d %H:%i:%s'), ' ', bill.`计划开工日期上午/下午`) AS `start`,
+    concat(formatDateTime(bill.`计划完工日期`, '%Y-%m-%d %H:%i:%s'), ' ', bill.`计划完工日期上午/下午`) AS `end`,
     bill.`作业地点` AS `location`,
     bill.`具体作业内容` AS `detail`
 FROM ods.interested_party_review AS bill FINAL
@@ -442,8 +442,8 @@ SELECT
     bill.`申请人姓名` AS `applicant`,
     bill.`公司名称` AS `company`,
     bill.`作业状态` AS `status`,
-    concat(formatDateTime(bill.`计划开工日期`, '%Y-%m-%d %H:%M:%S'), ' ', bill.`计划开工日期上午/下午`) AS `start`,
-    concat(formatDateTime(bill.`计划完工日期`, '%Y-%m-%d %H:%M:%S'), ' ', bill.`计划完工日期上午/下午`) AS `end`,
+    concat(formatDateTime(bill.`计划开工日期`, '%Y-%m-%d %H:%i:%s'), ' ', bill.`计划开工日期上午/下午`) AS `start`,
+    concat(formatDateTime(bill.`计划完工日期`, '%Y-%m-%d %H:%i:%s'), ' ', bill.`计划完工日期上午/下午`) AS `end`,
     bill.`作业地点` AS `location`,
     bill.`具体作业内容` AS `detail`
 FROM ods.interested_party_review AS bill FINAL
@@ -567,8 +567,8 @@ SELECT
     bill.`申请人姓名` AS `applicant`,
     bill.`公司名称` AS `company`,
     bill.`作业状态` AS `status`,
-    concat(formatDateTime(bill.`计划开工日期`, '%Y-%m-%d %H:%M:%S'), ' ', bill.`计划开工日期上午/下午`) AS `start`,
-    concat(formatDateTime(bill.`计划完工日期`, '%Y-%m-%d %H:%M:%S'), ' ', bill.`计划完工日期上午/下午`) AS `end`,
+    concat(formatDateTime(bill.`计划开工日期`, '%Y-%m-%d %H:%i:%s'), ' ', bill.`计划开工日期上午/下午`) AS `start`,
+    concat(formatDateTime(bill.`计划完工日期`, '%Y-%m-%d %H:%i:%s'), ' ', bill.`计划完工日期上午/下午`) AS `end`,
     bill.`作业地点` AS `location`,
     bill.`具体作业内容` AS `detail`
 FROM ods.interested_party_review AS bill FINAL
@@ -698,8 +698,8 @@ SELECT
     bill.`申请人姓名` AS `applicant`,
     bill.`公司名称` AS `company`,
     bill.`作业状态` AS `status`,
-    concat(formatDateTime(bill.`计划开工日期`, '%Y-%m-%d %H:%M:%S'), ' ', bill.`计划开工日期上午/下午`) AS `start`,
-    concat(formatDateTime(bill.`计划完工日期`, '%Y-%m-%d %H:%M:%S'), ' ', bill.`计划完工日期上午/下午`) AS `end`,
+    concat(formatDateTime(bill.`计划开工日期`, '%Y-%m-%d %H:%i:%s'), ' ', bill.`计划开工日期上午/下午`) AS `start`,
+    concat(formatDateTime(bill.`计划完工日期`, '%Y-%m-%d %H:%i:%s'), ' ', bill.`计划完工日期上午/下午`) AS `end`,
     bill.`作业地点` AS `location`,
     bill.`具体作业内容` AS `detail`
 FROM ods.interested_party_review AS bill FINAL
@@ -823,8 +823,8 @@ SELECT
     bill.`申请人姓名` AS `applicant`,
     bill.`公司名称` AS `company`,
     bill.`作业状态` AS `status`,
-    concat(formatDateTime(bill.`计划开工日期`, '%Y-%m-%d %H:%M:%S'), ' ', bill.`计划开工日期上午/下午`) AS `start`,
-    concat(formatDateTime(bill.`计划完工日期`, '%Y-%m-%d %H:%M:%S'), ' ', bill.`计划完工日期上午/下午`) AS `end`,
+    concat(formatDateTime(bill.`计划开工日期`, '%Y-%m-%d %H:%i:%s'), ' ', bill.`计划开工日期上午/下午`) AS `start`,
+    concat(formatDateTime(bill.`计划完工日期`, '%Y-%m-%d %H:%i:%s'), ' ', bill.`计划完工日期上午/下午`) AS `end`,
     bill.`作业地点` AS `location`,
     bill.`具体作业内容` AS `detail`
 FROM ods.interested_party_review AS bill FINAL

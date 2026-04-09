@@ -613,8 +613,8 @@
         const getStatusChip = (status) => {
             const baseClass = "chip uppercase tracking-wider";
             if (status === '正在作业') return `<span class="${baseClass} chip-working">${status}</span>`;
-            if (status === '已进入') return `<span class="${baseClass} chip-entered">${status}</span>`;
-            if (status === '作业完成') return `<span class="${baseClass} chip-completed">${status}</span>`;
+            if (status === '已进入事业部') return `<span class="${baseClass} chip-entered">${status}</span>`;
+            if (status === '未进入事业部') return `<span class="${baseClass} chip-completed">${status}</span>`;
             return `<span class="${baseClass} chip-other">${status}</span>`;
         };
 
@@ -697,31 +697,56 @@
 
                 // Update Charts
                 // Setup styling for specific items in charts
+                // Status Color Map
+                const statusColorMap = {
+                    '正在作业': COLORS.working,        // #C70019 (Red - Critical/Active)
+                    '已进入事业部': '#E2E2E2',          // Light Grey
+                    '已进入制造中心': '#E2E2E2',        // Light Grey (mapping equivalent)
+                    '未进入事业部': '#494646',          // Dark Grey
+                    '未进入制造中心': '#494646',        // Dark Grey (mapping equivalent)
+                    '其他': '#2A2A2A',                  // Very Dark Grey
+                };
+
                 const styleOverallStatus = data.charts.overall_status.map(item => {
-                    if (item.name === '正在作业') return { ...item, itemStyle: { color: COLORS.working, shadowBlur: 10, shadowColor: 'rgba(199, 0, 25, 0.5)' } };
-                    if (item.name === '已进入') return { ...item, itemStyle: { color: '#E2E2E2' } };
-                    return { ...item, itemStyle: { color: '#353535' } };
+                    const color = statusColorMap[item.name] || '#353535'; // Fallback color
+                    const style = { color: color };
+                    if (item.name === '正在作业') {
+                        style.shadowBlur = 10;
+                        style.shadowColor = 'rgba(199, 0, 25, 0.5)';
+                    }
+                    return { ...item, itemStyle: style };
                 });
                 overallStatusChart?.setOption({ series: [{ data: styleOverallStatus }] });
 
                 const styleAssemblyStatus = data.charts.assembly_status.map(item => {
-                    if (item.name === '正在作业') return { ...item, itemStyle: { color: COLORS.working } };
-                    if (item.name === '已进入') return { ...item, itemStyle: { color: '#E2E2E2' } };
-                    return { ...item, itemStyle: { color: '#353535' } };
+                    const color = statusColorMap[item.name] || '#353535';
+                    return { ...item, itemStyle: { color: color } };
                 });
                 assemblyStatusChart?.setOption({ series: [{ data: styleAssemblyStatus }] });
 
                 const styleDeliveryStatus = data.charts.delivery_status.map(item => {
-                    if (item.name === '正在作业') return { ...item, itemStyle: { color: COLORS.working } };
-                    if (item.name === '已进入') return { ...item, itemStyle: { color: '#E2E2E2' } };
-                    return { ...item, itemStyle: { color: '#353535' } };
+                    const color = statusColorMap[item.name] || '#353535';
+                    return { ...item, itemStyle: { color: color } };
                 });
                 deliveryStatusChart?.setOption({ series: [{ data: styleDeliveryStatus }] });
 
+                const deptColorMap = {
+                    '质量技术部': '#E2E2E2',     // text-secondary
+                    '质量管理板块': '#E2E2E2',    // mapping equivalent
+                    '项目工程部': '#A0A0A0',     // text-muted
+                    '项目管理板块': '#A0A0A0',    // mapping equivalent
+                    '总成车间': '#353535',       // surface-highest
+                    '总成组装板块': '#353535',    // mapping equivalent
+                    '交车车间': '#494646',       // secondary-container
+                    '调试交付板块': '#494646',    // mapping equivalent
+                    '综合管理部': '#1B1B1B',     // surface-low
+                    '综合管理板块': '#1B1B1B',    // mapping equivalent
+                    '工艺技术板块': '#2A2A2A',    // surface-high
+                };
+
                 const styleApprovalDept = data.charts.approval_dept.map(item => {
-                    if (item.name === '质量技术部') return { ...item, itemStyle: { color: '#E2E2E2' } };
-                    if (item.name === '总成组装板块') return { ...item, itemStyle: { color: '#353535' } };
-                    return { ...item, itemStyle: { color: '#494646' } };
+                    const color = deptColorMap[item.name] || '#393939'; // fallback to surface-bright
+                    return { ...item, itemStyle: { color: color } };
                 });
                 approvalDeptChart?.setOption({ series: [{ data: styleApprovalDept }] });
 
