@@ -300,7 +300,7 @@ FROM (
 ) AS _bill
 GROUP BY clean_categories
     """)
-    data["charts"]["hazards"]['categories'] = hazards_res["clean_category"].tolist()
+    data["charts"]["hazards"]['categories'] = hazards_res["clean_categories"].tolist()
     data["charts"]["hazards"]['values'] = hazards_res["values"].tolist()
     print(0.8)
     table_data_res = client.query_df(
