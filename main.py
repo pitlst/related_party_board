@@ -406,6 +406,162 @@ WHERE bill.Deleted = 0
     return data
 
 
+async def process_month() -> dict:
+    data = template_data.copy()
+    client = await get_client()
+    async def get_overall_res() -> pd.DataFrame:
+        return await client.query_df(
+            f"""
+SELECT 
+    DISTINCT 
+    bill.`作业状态` AS name,
+    count() AS value
+FROM ods.interested_party_review AS bill FINAL
+WHERE bill.Deleted = 0
+    AND toStartOfMonth(bill.`计划开工日期`) = toStartOfMonth(now())
+    AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
+GROUP BY 
+    bill.`作业状态`
+        """)
+    async def get_overall_assembly_res() -> pd.DataFrame:
+        return await client.query_df(
+            f"""
+SELECT 
+    DISTINCT 
+    bill.`作业状态` AS name,
+    count() AS value
+FROM ods.interested_party_review AS bill FINAL
+WHERE bill.Deleted = 0
+    AND toStartOfMonth(bill.`计划开工日期`) = toStartOfMonth(now())
+    AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域')
+GROUP BY 
+    bill.`作业状态`
+        """)
+    async def get_overall_delivery_res() -> pd.DataFrame:
+        return await client.query_df(
+        f"""
+SELECT 
+    DISTINCT 
+    bill.`作业状态` AS name,
+    count() AS value
+FROM ods.interested_party_review AS bill FINAL
+WHERE bill.Deleted = 0
+    AND toStartOfMonth(bill.`计划开工日期`) = toStartOfMonth(now())
+    AND bill.`作业地点` IN ('新调试', '老调试', '动车组调试基地', '交车车间落车调车区域')
+GROUP BY 
+    bill.`作业状态`
+    """)
+    async def get_approval_dept_res() -> pd.DataFrame:
+        return await client.query_df(
+        f"""
+SELECT 
+    DISTINCT 
+    bill.`事业部对接人部门` AS name,
+    count() AS value
+FROM ods.interested_party_review AS bill FINAL
+WHERE bill.Deleted = 0
+    AND toStartOfMonth(bill.`计划开工日期`) = toStartOfMonth(now())
+    AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
+GROUP BY 
+    bill.`事业部对接人部门`
+    """)
+    async def get_approval_contrast_res_0() -> pd.DataFrame:
+        return await client.query_df(
+        f"""
+SELECT 
+    count() AS value
+FROM ods.interested_party_review AS bill FINAL
+WHERE bill.Deleted = 0
+    AND bill.`计划开工日期` >= toStartOfWeek(today())
+    AND toStartOfMonth(bill.`计划开工日期`) = toStartOfMonth(now())
+    AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
+    """)
+    async def get_approval_contrast_res_1() -> pd.DataFrame:
+        return await client.query_df(
+        f"""
+SELECT 
+    count() AS value
+FROM ods.interested_party_review AS bill FINAL
+WHERE bill.Deleted = 0
+    AND toStartOfMonth(bill.`计划开工日期`) = toStartOfMonth(now())
+    AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
+    AND bill.`单据状态` = '已审核'
+    """)
+    async def get_hazards_res() -> pd.DataFrame:
+        return await client.query_df(
+        f"""
+SELECT 
+    trim(category) as clean_category,
+    count() as values
+FROM (
+    SELECT
+        arrayJoin(
+            arrayDistinct(
+                arrayMap(x -> trim(x), 
+                    splitByChar(',', trim(bill.`作业危险性`))
+                )
+            )
+        ) as category
+    FROM ods.interested_party_review AS bill FINAL
+    WHERE bill.Deleted = 0
+        AND toStartOfMonth(bill.`计划开工日期`) = toStartOfMonth(now())
+        AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
+) AS _bill
+WHERE _bill.category IS NOT NULL AND _bill.category <> ''
+GROUP BY clean_category
+    """)
+    async def get_table_data_res() -> pd.DataFrame:
+        return await  client.query_df(
+        f"""
+SELECT 
+    DISTINCT
+    bill.`申请人姓名` AS `applicant`,
+    bill.`公司名称` AS `company`,
+    bill.`作业状态` AS `status`,
+    concat(formatDateTime(bill.`计划开工日期`, '%Y-%m-%d'), ' ', bill.`计划开工日期上午/下午`) AS `start`,
+    concat(formatDateTime(bill.`计划完工日期`, '%Y-%m-%d'), ' ', bill.`计划完工日期上午/下午`) AS `end`,
+    bill.`作业地点` AS `location`,
+    bill.`具体作业内容` AS `detail`
+FROM ods.interested_party_review AS bill FINAL
+WHERE bill.Deleted = 0
+    AND toStartOfMonth(bill.`计划开工日期`) = toStartOfMonth(now())
+    AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
+    """)
+
+    task_list = [
+        get_overall_res(),
+        get_overall_assembly_res(),
+        get_overall_delivery_res(),
+        get_approval_dept_res(),
+        get_approval_contrast_res_0(),
+        get_approval_contrast_res_1(),
+        get_hazards_res(),
+        get_table_data_res(),
+    ]
+    (
+        overall_res,
+        overall_assembly_res,
+        overall_delivery_res,
+        approval_dept_res,
+        approval_contrast_res_0,
+        approval_contrast_res_1,
+        hazards_res,
+        table_data_res,
+    ) = await asyncio.gather(*task_list, return_exceptions=False)
+        
+    data["charts"]["overall_status"] = overall_res.to_dict(orient="records")
+    data["charts"]["assembly_status"] = overall_assembly_res.to_dict(orient="records")
+    data["charts"]["delivery_status"] = overall_delivery_res.to_dict(orient="records")
+    data["charts"]["approval_dept"] = approval_dept_res.to_dict(orient="records")
+    approval_contrast_list = []
+    approval_contrast_list.append(int(approval_contrast_res_0.iloc[0]["value"]))
+    approval_contrast_list.append(int(approval_contrast_res_1.iloc[0]["value"]))
+    data["charts"]["approval_contrast"]['values'] = approval_contrast_list
+    data["charts"]["hazards"]['categories'] = hazards_res["clean_category"].tolist()
+    data["charts"]["hazards"]['values'] = hazards_res["values"].tolist()
+    data["table_data"] = table_data_res.to_dict(orient="records")    
+    return data
+
 async def process_week() -> dict:
     data = template_data.copy()
     client = await get_client()
