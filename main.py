@@ -1,19 +1,28 @@
 from pathlib import Path
+import asyncio
 import mimetypes
+import clickhouse_connect.driver.asyncclient
 from litestar import Litestar, get
 from litestar.static_files.config import StaticFilesConfig
 from litestar.response import Response
 import clickhouse_connect
+import pandas as pd
 
 mimetypes.add_type("application/javascript", ".js")
 
-client = clickhouse_connect.get_client(
-    host="10.24.5.59",
-    port=8123,
-    username="cheakf",
-    password="Swq8855830.",
-    database="default"
-)
+_client = None
+
+async def get_client() -> clickhouse_connect.driver.asyncclient.AsyncClient:
+    global _client
+    if _client is None:
+        _client = await clickhouse_connect.get_async_client(
+            host="10.24.5.59",
+            port=8123,
+            username="cheakf",
+            password="Swq8855830.",
+            database="default"
+        )
+    return _client
 
 
 @get("/")
@@ -84,6 +93,103 @@ template_data = {
 }
 
 
+async def get_total_count_res(time_filter_sql: str) -> pd.DataFrame:
+    client = await get_client()
+    return await client.query_df(
+        f"""
+SELECT 
+    count() AS total_count
+FROM ods.interested_party_review AS bill FINAL
+WHERE bill.Deleted = 0
+    AND {time_filter_sql}
+    AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
+        """)
+    
+async def get_assembly_count_res(time_filter_sql: str) -> pd.DataFrame:
+    client = await get_client()
+    return await client.query_df(
+        f"""
+SELECT 
+    count() AS total_count
+FROM ods.interested_party_review AS bill FINAL
+WHERE bill.Deleted = 0
+    AND {time_filter_sql}
+    AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域')
+        """)
+    
+async def get_delivery_count_res(time_filter_sql: str) -> pd.DataFrame:
+    client = await get_client()
+    return await client.query_df(
+        f"""
+SELECT 
+    count() AS total_count
+FROM ods.interested_party_review AS bill FINAL
+WHERE bill.Deleted = 0
+    AND {time_filter_sql}
+    AND bill.`作业地点` IN ('新调试', '老调试', '动车组调试基地', '交车车间落车调车区域')
+        """) 
+    
+async def get_outside_count_res(time_filter_sql: str) -> pd.DataFrame:
+    client = await get_client()
+    return await client.query_df(
+        f"""
+SELECT 
+    count() AS total_count
+FROM ods.interested_party_review AS bill FINAL
+WHERE bill.Deleted = 0
+    AND {time_filter_sql}
+    AND bill.`作业地点` IN ('库外')
+        """)
+    
+async def get_month_count_res() -> pd.DataFrame:
+    client = await get_client()
+    return await client.query_df(
+        f"""
+SELECT 
+    count() AS total_count
+FROM ods.interested_party_review AS bill FINAL
+WHERE bill.Deleted = 0
+    AND toStartOfMonth(bill.`计划开工日期`) = toStartOfMonth(now())
+    AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
+        """)
+
+async def get_month_assembly_count_res() -> pd.DataFrame:
+    client = await get_client()
+    return await client.query_df(
+        f"""
+SELECT 
+    count() AS total_count
+FROM ods.interested_party_review AS bill FINAL
+WHERE bill.Deleted = 0
+    AND toStartOfMonth(bill.`计划开工日期`) = toStartOfMonth(now())
+    AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域')
+        """)
+    
+async def get_month_delivery_count_res() -> pd.DataFrame:
+    client = await get_client()
+    return await client.query_df(
+        f"""
+SELECT 
+    count() AS total_count
+FROM ods.interested_party_review AS bill FINAL
+WHERE bill.Deleted = 0
+    AND toStartOfMonth(bill.`计划开工日期`) = toStartOfMonth(now())
+    AND bill.`作业地点` IN ('新调试', '老调试', '动车组调试基地', '交车车间落车调车区域')
+        """)
+    
+async def get_month_outside_count_res() -> pd.DataFrame:
+    client = await get_client()
+    return await client.query_df(
+        f"""
+SELECT 
+    count() AS total_count
+FROM ods.interested_party_review AS bill FINAL
+WHERE bill.Deleted = 0
+    AND toStartOfMonth(bill.`计划开工日期`) = toStartOfMonth(now())
+    AND bill.`作业地点` IN ('库外')
+        """)
+    
+
 @get("/api/dashboard-data")
 async def get_dashboard_data(time: str = "每日") -> Response:
     print(f"Received request for time filter: {time}")
@@ -108,86 +214,34 @@ async def get_dashboard_data(time: str = "每日") -> Response:
             data = await process_today()
             time_filter_sql = "toStartOfDay(bill.`计划开工日期`) = toStartOfDay(now())"
 
-        total_count_res = client.query_df(
-            f"""
-SELECT 
-    count() AS total_count
-FROM ods.interested_party_review AS bill FINAL
-WHERE bill.Deleted = 0
-    AND {time_filter_sql}
-    AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
-        """)
-        data["metrics"]["today_total"] = int(total_count_res.iloc[0]["total_count"])
-        assembly_count_res = client.query_df(
-            f"""
-SELECT 
-    count() AS total_count
-FROM ods.interested_party_review AS bill FINAL
-WHERE bill.Deleted = 0
-    AND {time_filter_sql}
-    AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域')
-        """)
-        data["metrics"]["today_assembly"] = int(assembly_count_res.iloc[0]["total_count"])
-        delivery_count_res = client.query_df(
-            f"""
-SELECT 
-    count() AS total_count
-FROM ods.interested_party_review AS bill FINAL
-WHERE bill.Deleted = 0
-    AND {time_filter_sql}
-    AND bill.`作业地点` IN ('新调试', '老调试', '动车组调试基地', '交车车间落车调车区域')
-        """)
-        data["metrics"]["today_delivery"] = int(delivery_count_res.iloc[0]["total_count"])
-        outside_count_res = client.query_df(
-            f"""
-SELECT 
-    count() AS total_count
-FROM ods.interested_party_review AS bill FINAL
-WHERE bill.Deleted = 0
-    AND {time_filter_sql}
-    AND bill.`作业地点` IN ('库外')
-        """)
-        data["metrics"]["today_outside"] = int(outside_count_res.iloc[0]["total_count"])
+        task_list = [
+            get_total_count_res(time_filter_sql),
+            get_assembly_count_res(time_filter_sql),
+            get_delivery_count_res(time_filter_sql),
+            get_outside_count_res(time_filter_sql),
+            get_month_count_res(),
+            get_month_assembly_count_res(),
+            get_month_delivery_count_res(),
+            get_month_outside_count_res(),
+        ]
+        (
+            total_count_res,
+            assembly_count_res,
+            delivery_count_res,
+            outside_count_res,
+            month_count_res,
+            month_assembly_count_res,
+            month_delivery_count_res,
+            month_outside_count_res,
+        ) = await asyncio.gather(*task_list, return_exceptions=False)
 
-        month_count_res = client.query_df(
-            f"""
-SELECT 
-    count() AS total_count
-FROM ods.interested_party_review AS bill FINAL
-WHERE bill.Deleted = 0
-    AND toStartOfMonth(bill.`计划开工日期`) = toStartOfMonth(now())
-    AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
-        """)
+        data["metrics"]["today_total"] = int(total_count_res.iloc[0]["total_count"])
+        data["metrics"]["today_assembly"] = int(assembly_count_res.iloc[0]["total_count"])
+        data["metrics"]["today_delivery"] = int(delivery_count_res.iloc[0]["total_count"])
+        data["metrics"]["today_outside"] = int(outside_count_res.iloc[0]["total_count"])
         data["metrics"]["month_total"] = int(month_count_res.iloc[0]["total_count"])
-        month_assembly_count_res = client.query_df(
-            f"""
-SELECT 
-    count() AS total_count
-FROM ods.interested_party_review AS bill FINAL
-WHERE bill.Deleted = 0
-    AND toStartOfMonth(bill.`计划开工日期`) = toStartOfMonth(now())
-    AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域')
-        """)
         data["metrics"]["month_assembly"] = int(month_assembly_count_res.iloc[0]["total_count"])
-        month_delivery_count_res = client.query_df(
-            f"""
-SELECT 
-    count() AS total_count
-FROM ods.interested_party_review AS bill FINAL
-WHERE bill.Deleted = 0
-    AND toStartOfMonth(bill.`计划开工日期`) = toStartOfMonth(now())
-    AND bill.`作业地点` IN ('新调试', '老调试', '动车组调试基地', '交车车间落车调车区域')
-        """)
         data["metrics"]["month_delivery"] = int(month_delivery_count_res.iloc[0]["total_count"])
-        month_outside_count_res = client.query_df(
-            f"""
-SELECT 
-    count() AS total_count
-FROM ods.interested_party_review AS bill FINAL
-WHERE bill.Deleted = 0
-    AND toStartOfMonth(bill.`计划开工日期`) = toStartOfMonth(now())
-    AND bill.`作业地点` IN ('库外')
-        """)
         data["metrics"]["month_outside"] = int(month_outside_count_res.iloc[0]["total_count"])
 
     except Exception as e:
@@ -197,8 +251,10 @@ WHERE bill.Deleted = 0
 
 async def process_today() -> dict:
     data = template_data.copy()
-    overall_res = client.query_df(
-        f"""
+    client = await get_client()
+    async def get_overall_res() -> pd.DataFrame:
+        return await client.query_df(
+            f"""
 SELECT 
     DISTINCT 
     bill.`作业状态` AS name,
@@ -209,10 +265,10 @@ WHERE bill.Deleted = 0
     AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
 GROUP BY 
     bill.`作业状态`
-    """)
-    data["charts"]["overall_status"] = overall_res.to_dict(orient="records")
-    overall_assembly_res = client.query_df(
-        f"""
+        """)
+    async def get_overall_assembly_res() -> pd.DataFrame:
+        return await client.query_df(
+            f"""
 SELECT 
     DISTINCT 
     bill.`作业状态` AS name,
@@ -223,9 +279,9 @@ WHERE bill.Deleted = 0
     AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域')
 GROUP BY 
     bill.`作业状态`
-    """)
-    data["charts"]["assembly_status"] = overall_assembly_res.to_dict(orient="records")
-    overall_delivery_res = client.query_df(
+        """)
+    async def get_overall_delivery_res() -> pd.DataFrame:
+        return await client.query_df(
         f"""
 SELECT 
     DISTINCT 
@@ -238,8 +294,8 @@ WHERE bill.Deleted = 0
 GROUP BY 
     bill.`作业状态`
     """)
-    data["charts"]["delivery_status"] = overall_delivery_res.to_dict(orient="records")
-    approval_dept_res = client.query_df(
+    async def get_approval_dept_res() -> pd.DataFrame:
+        return await client.query_df(
         f"""
 SELECT 
     DISTINCT 
@@ -252,9 +308,8 @@ WHERE bill.Deleted = 0
 GROUP BY 
     bill.`事业部对接人部门`
     """)
-    data["charts"]["approval_dept"] = approval_dept_res.to_dict(orient="records")
-    approval_contrast_list = []
-    approval_contrast_res = client.query_df(
+    async def get_approval_contrast_res_0() -> pd.DataFrame:
+        return await client.query_df(
         f"""
 SELECT 
     count() AS value
@@ -263,8 +318,8 @@ WHERE bill.Deleted = 0
     AND toStartOfDay(bill.`计划开工日期`) = toStartOfDay(now())
     AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
     """)
-    approval_contrast_list.append(int(approval_contrast_res.iloc[0]["value"]))
-    approval_contrast_res = client.query_df(
+    async def get_approval_contrast_res_1() -> pd.DataFrame:
+        return await client.query_df(
         f"""
 SELECT 
     count() AS value
@@ -274,9 +329,8 @@ WHERE bill.Deleted = 0
     AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
     AND bill.`单据状态` = '已审核'
     """)
-    approval_contrast_list.append(int(approval_contrast_res.iloc[0]["value"]))
-    data["charts"]["approval_contrast"]['values'] = approval_contrast_list
-    hazards_res = client.query_df(
+    async def get_hazards_res() -> pd.DataFrame:
+        return await client.query_df(
         f"""
 SELECT 
     trim(category) as clean_category,
@@ -298,9 +352,8 @@ FROM (
 WHERE _bill.category IS NOT NULL AND _bill.category <> ''
 GROUP BY clean_category
     """)
-    data["charts"]["hazards"]['categories'] = hazards_res["clean_category"].tolist()
-    data["charts"]["hazards"]['values'] = hazards_res["values"].tolist()
-    table_data_res = client.query_df(
+    async def get_table_data_res() -> pd.DataFrame:
+        return await  client.query_df(
         f"""
 SELECT 
     DISTINCT
@@ -316,6 +369,38 @@ WHERE bill.Deleted = 0
     AND toStartOfDay(bill.`计划开工日期`) = toStartOfDay(now())
     AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
     """)
+
+    task_list = [
+        get_overall_res(),
+        get_overall_assembly_res(),
+        get_overall_delivery_res(),
+        get_approval_dept_res(),
+        get_approval_contrast_res_0(),
+        get_approval_contrast_res_1(),
+        get_hazards_res(),
+        get_table_data_res(),
+    ]
+    (
+        overall_res,
+        overall_assembly_res,
+        overall_delivery_res,
+        approval_dept_res,
+        approval_contrast_res_0,
+        approval_contrast_res_1,
+        hazards_res,
+        table_data_res,
+    ) = await asyncio.gather(*task_list, return_exceptions=False)
+        
+    data["charts"]["overall_status"] = overall_res.to_dict(orient="records")
+    data["charts"]["assembly_status"] = overall_assembly_res.to_dict(orient="records")
+    data["charts"]["delivery_status"] = overall_delivery_res.to_dict(orient="records")
+    data["charts"]["approval_dept"] = approval_dept_res.to_dict(orient="records")
+    approval_contrast_list = []
+    approval_contrast_list.append(int(approval_contrast_res_0.iloc[0]["value"]))
+    approval_contrast_list.append(int(approval_contrast_res_1.iloc[0]["value"]))
+    data["charts"]["approval_contrast"]['values'] = approval_contrast_list
+    data["charts"]["hazards"]['categories'] = hazards_res["clean_category"].tolist()
+    data["charts"]["hazards"]['values'] = hazards_res["values"].tolist()
     data["table_data"] = table_data_res.to_dict(orient="records")
     return data
 
