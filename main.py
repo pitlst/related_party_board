@@ -1,17 +1,21 @@
-from pathlib import Path
+
 import asyncio
 import mimetypes
+import warnings
+import clickhouse_connect
+import pandas as pd
 import clickhouse_connect.driver.asyncclient
 from clickhouse_connect.driver import httputil
 from litestar import Litestar, get
 from litestar.static_files.config import StaticFilesConfig
 from litestar.response import Response
-import clickhouse_connect
-import pandas as pd
+from pathlib import Path
+
 
 mimetypes.add_type("application/javascript", ".js")
+warnings.filterwarnings('ignore', category=FutureWarning)
 
-semaphore = asyncio.Semaphore(8)
+semaphore = asyncio.Semaphore(32)
 
 _client = None
 async def get_client() -> clickhouse_connect.driver.asyncclient.AsyncClient:
@@ -105,7 +109,8 @@ template_data = {
 
 async def get_total_count_res(time_filter_sql: str) -> pd.DataFrame:
     client = await get_client()
-    return await client.query_df(
+    async with semaphore:
+        return await client.query_df(
             f"""
 SELECT 
     count() AS total_count
@@ -118,7 +123,8 @@ WHERE bill.Deleted = 0
 
 async def get_assembly_count_res(time_filter_sql: str) -> pd.DataFrame:
     client = await get_client()
-    return await client.query_df(
+    async with semaphore:
+        return await client.query_df(
             f"""
 SELECT 
     count() AS total_count
@@ -131,7 +137,8 @@ WHERE bill.Deleted = 0
 
 async def get_delivery_count_res(time_filter_sql: str) -> pd.DataFrame:
     client = await get_client()
-    return await client.query_df(
+    async with semaphore:
+        return await client.query_df(
             f"""
 SELECT 
     count() AS total_count
@@ -144,7 +151,8 @@ WHERE bill.Deleted = 0
 
 async def get_outside_count_res(time_filter_sql: str) -> pd.DataFrame:
     client = await get_client()
-    return await client.query_df(
+    async with semaphore:
+        return await client.query_df(
             f"""
 SELECT 
     count() AS total_count
@@ -157,7 +165,8 @@ WHERE bill.Deleted = 0
 
 async def get_month_count_res() -> pd.DataFrame:
     client = await get_client()
-    return await client.query_df(
+    async with semaphore:
+        return await client.query_df(
             f"""
 SELECT 
     count() AS total_count
@@ -170,7 +179,8 @@ WHERE bill.Deleted = 0
 
 async def get_month_assembly_count_res() -> pd.DataFrame:
     client = await get_client()
-    return await client.query_df(
+    async with semaphore:
+        return await client.query_df(
             f"""
 SELECT 
     count() AS total_count
@@ -183,7 +193,8 @@ WHERE bill.Deleted = 0
 
 async def get_month_delivery_count_res() -> pd.DataFrame:
     client = await get_client()
-    return await client.query_df(
+    async with semaphore:
+        return await client.query_df(
             f"""
 SELECT 
     count() AS total_count
@@ -196,7 +207,8 @@ WHERE bill.Deleted = 0
 
 async def get_month_outside_count_res() -> pd.DataFrame:
     client = await get_client()
-    return await client.query_df(
+    async with semaphore:
+        return await client.query_df(
             f"""
 SELECT 
     count() AS total_count
@@ -267,8 +279,9 @@ async def process_data(time_filter_sql: str) -> dict:
     client = await get_client()
 
     async def get_overall_res() -> pd.DataFrame:
-        return await client.query_df(
-            f"""
+        async with semaphore:
+            return await client.query_df(
+                f"""
 SELECT 
     DISTINCT 
     bill.`作业状态` AS name,
@@ -279,11 +292,12 @@ WHERE bill.Deleted = 0
     AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
 GROUP BY 
     bill.`作业状态`
-        """)
+                """)
 
     async def get_overall_assembly_res() -> pd.DataFrame:
-        return await client.query_df(
-            f"""
+        async with semaphore:
+            return await client.query_df(
+                f"""
 SELECT 
     DISTINCT 
     bill.`作业状态` AS name,
@@ -294,11 +308,12 @@ WHERE bill.Deleted = 0
     AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域')
 GROUP BY 
     bill.`作业状态`
-        """)
+                """)
 
     async def get_overall_delivery_res() -> pd.DataFrame:
-        return await client.query_df(
-            f"""
+        async with semaphore:
+            return await client.query_df(
+                f"""
 SELECT 
     DISTINCT 
     bill.`作业状态` AS name,
@@ -309,11 +324,12 @@ WHERE bill.Deleted = 0
     AND bill.`作业地点` IN ('新调试', '老调试', '动车组调试基地', '交车车间落车调车区域')
 GROUP BY 
     bill.`作业状态`
-    """)
+                """)
 
     async def get_approval_dept_res() -> pd.DataFrame:
-        return await client.query_df(
-            f"""
+        async with semaphore:
+            return await client.query_df(
+                f"""
 SELECT 
     DISTINCT 
     bill.`事业部对接人部门` AS name,
@@ -324,22 +340,24 @@ WHERE bill.Deleted = 0
     AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
 GROUP BY 
     bill.`事业部对接人部门`
-    """)
+                """)
 
     async def get_approval_contrast_res_0() -> pd.DataFrame:
-        return await client.query_df(
-            f"""
+        async with semaphore:
+            return await client.query_df(
+                f"""
 SELECT 
     count() AS value
 FROM ods.interested_party_review AS bill FINAL
 WHERE bill.Deleted = 0
     AND {time_filter_sql}
     AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
-    """)
+                """)
 
     async def get_approval_contrast_res_1() -> pd.DataFrame:
-        return await client.query_df(
-            f"""
+        async with semaphore:
+            return await client.query_df(
+                f"""
 SELECT 
     count() AS value
 FROM ods.interested_party_review AS bill FINAL
@@ -347,11 +365,12 @@ WHERE bill.Deleted = 0
     AND {time_filter_sql}
     AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
     AND bill.`单据状态` = '已审核'
-    """)
+                """)
 
     async def get_hazards_res() -> pd.DataFrame:
-        return await client.query_df(
-            f"""
+        async with semaphore:
+            return await client.query_df(
+                f"""
 SELECT 
     trim(category) as clean_category,
     count() as values
@@ -371,11 +390,12 @@ FROM (
 ) AS _bill
 WHERE _bill.category IS NOT NULL AND _bill.category <> ''
 GROUP BY clean_category
-    """)
+                """)
 
     async def get_table_data_res() -> pd.DataFrame:
-        return await client.query_df(
-            f"""
+        async with semaphore:
+            return await client.query_df(
+                f"""
 SELECT 
     DISTINCT
     bill.`申请人姓名` AS `applicant`,
@@ -389,7 +409,7 @@ FROM ods.interested_party_review AS bill FINAL
 WHERE bill.Deleted = 0
     AND {time_filter_sql}
     AND bill.`作业地点` IN ('总成车间', '总成车间其他区域', '总成所属交车落车调车区域', '新调试', '老调试', '动车组调试基地', '交车车间落车调车区域', '库外')
-    """)
+                """)
 
     task_list = [
         get_overall_res(),
