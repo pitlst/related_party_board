@@ -10,23 +10,17 @@ import pandas as pd
 
 mimetypes.add_type("application/javascript", ".js")
 
+semaphore = asyncio.Semaphore(8)
 
 async def get_client() -> clickhouse_connect.driver.asyncclient.AsyncClient:
-    return await clickhouse_connect.get_async_client(
-        host="10.24.5.59",
-        port=8123,
-        username="cheakf",
-        password="Swq8855830.",
-        database="default",
-        # 修复连接池满的核心配置
-        pool_kwargs={
-            'maxsize': 32,        # 异步场景建议 20-50，根据并发量调整
-            'block': False,       # 池满时不阻塞，避免请求堆积
-            'timeout': 300,       # 连接保活 5 分钟
-        },
-        # 限制并发线程池大小（防止底层线程爆炸）
-        max_threads=16
-    )
+    async with semaphore:
+        return await clickhouse_connect.get_async_client(
+            host="10.24.5.59",
+            port=8123,
+            username="cheakf",
+            password="Swq8855830.",
+            database="default"
+        )
 
 
 @get("/")
