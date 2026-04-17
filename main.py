@@ -18,6 +18,8 @@ warnings.filterwarnings('ignore', category=FutureWarning)
 semaphore = asyncio.Semaphore(32)
 
 _client = None
+
+
 async def get_client() -> clickhouse_connect.driver.asyncclient.AsyncClient:
     global _client
     if _client is None:
@@ -36,7 +38,6 @@ async def get_client() -> clickhouse_connect.driver.asyncclient.AsyncClient:
             pool_mgr=pool_mgr
         )
     return _client
-        
 
 
 @get("/")
