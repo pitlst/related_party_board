@@ -17,7 +17,15 @@ async def get_client() -> clickhouse_connect.driver.asyncclient.AsyncClient:
         port=8123,
         username="cheakf",
         password="Swq8855830.",
-        database="default"
+        database="default",
+        # 修复连接池满的核心配置
+        pool_kwargs={
+            'maxsize': 32,        # 异步场景建议 20-50，根据并发量调整
+            'block': False,       # 池满时不阻塞，避免请求堆积
+            'timeout': 300,       # 连接保活 5 分钟
+        },
+        # 限制并发线程池大小（防止底层线程爆炸）
+        max_threads=16
     )
 
 
@@ -397,6 +405,7 @@ WHERE bill.Deleted = 0
         hazards_res,
         table_data_res,
     ) = await asyncio.gather(*task_list, return_exceptions=False)
+    await client.close()
 
     data["charts"]["overall_status"] = overall_res.to_dict(orient="records")
     data["charts"]["assembly_status"] = overall_assembly_res.to_dict(orient="records")
