@@ -2,6 +2,7 @@ from pathlib import Path
 import asyncio
 import mimetypes
 import clickhouse_connect.driver.asyncclient
+from clickhouse_connect.driver import httputil
 from litestar import Litestar, get
 from litestar.static_files.config import StaticFilesConfig
 from litestar.response import Response
@@ -12,15 +13,26 @@ mimetypes.add_type("application/javascript", ".js")
 
 semaphore = asyncio.Semaphore(8)
 
+_client = None
 async def get_client() -> clickhouse_connect.driver.asyncclient.AsyncClient:
-    async with semaphore:
-        return await clickhouse_connect.get_async_client(
+    global _client
+    if _client is None:
+        pool_mgr = httputil.get_pool_manager(
+            maxsize=32,
+            num_pools=2,
+            block=False,  # 关键：池满时不丢弃连接，而是新建临时连接
+            timeout=150
+        )
+        _client = await clickhouse_connect.get_async_client(
             host="10.24.5.59",
             port=8123,
             username="cheakf",
             password="Swq8855830.",
-            database="default"
+            database="default",
+            pool_mgr=pool_mgr
         )
+    return _client
+        
 
 
 @get("/")
@@ -92,8 +104,8 @@ template_data = {
 
 
 async def get_total_count_res(time_filter_sql: str) -> pd.DataFrame:
-    async with await get_client() as client:
-        return await client.query_df(
+    client = await get_client()
+    return await client.query_df(
             f"""
 SELECT 
     count() AS total_count
@@ -105,8 +117,8 @@ WHERE bill.Deleted = 0
 
 
 async def get_assembly_count_res(time_filter_sql: str) -> pd.DataFrame:
-    async with await get_client() as client:
-        return await client.query_df(
+    client = await get_client()
+    return await client.query_df(
             f"""
 SELECT 
     count() AS total_count
@@ -118,8 +130,8 @@ WHERE bill.Deleted = 0
 
 
 async def get_delivery_count_res(time_filter_sql: str) -> pd.DataFrame:
-    async with await get_client() as client:
-        return await client.query_df(
+    client = await get_client()
+    return await client.query_df(
             f"""
 SELECT 
     count() AS total_count
@@ -131,8 +143,8 @@ WHERE bill.Deleted = 0
 
 
 async def get_outside_count_res(time_filter_sql: str) -> pd.DataFrame:
-    async with await get_client() as client:
-        return await client.query_df(
+    client = await get_client()
+    return await client.query_df(
             f"""
 SELECT 
     count() AS total_count
@@ -144,8 +156,8 @@ WHERE bill.Deleted = 0
 
 
 async def get_month_count_res() -> pd.DataFrame:
-    async with await get_client() as client:
-        return await client.query_df(
+    client = await get_client()
+    return await client.query_df(
             f"""
 SELECT 
     count() AS total_count
@@ -157,8 +169,8 @@ WHERE bill.Deleted = 0
 
 
 async def get_month_assembly_count_res() -> pd.DataFrame:
-    async with await get_client() as client:
-        return await client.query_df(
+    client = await get_client()
+    return await client.query_df(
             f"""
 SELECT 
     count() AS total_count
@@ -170,8 +182,8 @@ WHERE bill.Deleted = 0
 
 
 async def get_month_delivery_count_res() -> pd.DataFrame:
-    async with await get_client() as client:
-        return await client.query_df(
+    client = await get_client()
+    return await client.query_df(
             f"""
 SELECT 
     count() AS total_count
@@ -183,8 +195,8 @@ WHERE bill.Deleted = 0
 
 
 async def get_month_outside_count_res() -> pd.DataFrame:
-    async with await get_client() as client:
-        return await client.query_df(
+    client = await get_client()
+    return await client.query_df(
             f"""
 SELECT 
     count() AS total_count
@@ -399,7 +411,6 @@ WHERE bill.Deleted = 0
         hazards_res,
         table_data_res,
     ) = await asyncio.gather(*task_list, return_exceptions=False)
-    await client.close()
 
     data["charts"]["overall_status"] = overall_res.to_dict(orient="records")
     data["charts"]["assembly_status"] = overall_assembly_res.to_dict(orient="records")
